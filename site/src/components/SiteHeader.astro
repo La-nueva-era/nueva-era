@@ -1,6 +1,6 @@
 ---
-// Global header (SPEC §7.1): wordmark, and quiet links to the sections that
-// exist. The search field arrives with the search index (Phase 2).
+// Global header (SPEC §7.1): wordmark, search field, quiet section links.
+import HeaderSearch from "./HeaderSearch.astro";
 import { es } from "../i18n/es.ts";
 import { loadEdition } from "../lib/edition.ts";
 
@@ -12,6 +12,7 @@ const path = Astro.url.pathname;
   <a class="wordmark" href="/">
     {es.site.name}
   </a>
+  <HeaderSearch />
   <nav aria-label={es.nav.label}>
     {authors.map((a) => (
       <a
@@ -26,9 +27,9 @@ const path = Astro.url.pathname;
 
 <style>
   header.site {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--s-4);
     padding-top: var(--s-5);
   }
@@ -47,6 +48,7 @@ const path = Astro.url.pathname;
   nav {
     display: flex;
     gap: var(--s-4);
+    margin-left: auto;
     font-size: var(--fs-ui);
     color: var(--muted);
     white-space: nowrap;
@@ -58,5 +60,10 @@ const path = Astro.url.pathname;
   nav a:hover,
   nav a[aria-current="page"] {
     color: var(--ink);
+  }
+  @media (max-width: 640px) {
+    nav {
+      margin-left: 0;
+    }
   }
 </style>

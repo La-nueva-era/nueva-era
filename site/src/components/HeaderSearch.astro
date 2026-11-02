@@ -1,0 +1,313 @@
+---
+// Header search with suggestions (SPEC §10.1). The index loads on the first
+// focus of the field, never on page load. Without JS the form still submits
+// to /buscar.
+import { es } from "../i18n/es.ts";
+---
+
+<form class="searchbox" action="/buscar" method="get" role="search">
+  <button
+    class="open"
+    type="button"
+    aria-label={es.search.open}
+    aria-expanded="false"
+  >
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="m20 20-3.5-3.5"></path>
+    </svg>
+  </button>
+  <input
+    id="q"
+    name="q"
+    type="search"
+    placeholder={es.search.placeholder}
+    autocomplete="off"
+    spellcheck="false"
+    aria-label={es.search.label}
+    role="combobox"
+    aria-autocomplete="list"
+    aria-expanded="false"
+    aria-controls="sugg"
+  />
+  <ul
+    class="sugg"
+    id="sugg"
+    role="listbox"
+    aria-label={es.search.label}
+    hidden
+  ></ul>
+</form>
+
+<script>
+  import { es } from "../i18n/es.ts";
+  import { getIndex } from "../scripts/search-index.ts";
+
+  const form = document.querySelector<HTMLFormElement>("form.searchbox");
+  const input = document.getElementById("q") as HTMLInputElement | null;
+  const list = document.getElementById("sugg");
+  const opener = form?.querySelector<HTMLButtonElement>(".open");
+
+  if (form && input && list) {
+    let active = -1;
+    let seq = 0;
+    const options = () => [
+      ...list.querySelectorAll<HTMLAnchorElement>("[role=option]"),
+    ];
+
+    const close = () => {
+      list.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+      active = -1;
+    };
+    const setActive = (i: number) => {
+      const opts = options();
+      opts.forEach((o, j) => o.setAttribute("aria-selected", String(j === i)));
+      active = i;
+      const id = opts[i]?.id;
+      if (id) input.setAttribute("aria-activedescendant", id);
+      else input.removeAttribute("aria-activedescendant");
+    };
+
+    const option = (
+      id: string,
+      href: string,
+      main: string,
+      who?: string,
+      cls?: string,
+    ) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "presentation");
+      const a = document.createElement("a");
+      a.id = id;
+      a.href = href;
+      a.setAttribute("role", "option");
+      a.setAttribute("aria-selected", "false");
+      a.tabIndex = -1;
+      if (cls) a.className = cls;
+      const t = document.createElement("span");
+      t.textContent = main;
+      a.append(t);
+      if (who) {
+        const w = document.createElement("span");
+        w.className = "who";
+        w.textContent = who;
+        a.append(w);
+      }
+      li.append(a);
+      return li;
+    };
+
+    const render = async () => {
+      const q = input.value.trim();
+      const mine = ++seq;
+      if (!q) return close();
+      const index = await getIndex();
+      if (mine !== seq) return; // a newer keystroke won
+      const items = (await import("../lib/search.ts"))
+        .suggest(index, q)
+        .map((s, i) => {
+          const w = index.works[s.work];
+          if (!w) return null;
+          const mark = w.marks[0];
+          const series = mark
+            ? ` — ${mark.title}${mark.position === undefined ? "" : `, ${mark.position}`}`
+            : "";
+          return option(`sugg-${i}`, w.url, w.title, `${w.author}${series}`);
+        });
+      list.replaceChildren(
+        ...items.filter((x) => x !== null),
+        option(
+          "sugg-all",
+          `/buscar?q=${encodeURIComponent(q)}`,
+          es.search.inVerses(q),
+          undefined,
+          "all",
+        ),
+      );
+      list.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      setActive(-1);
+    };
+
+    input.addEventListener("focus", () => {
+      void getIndex();
+      if (input.value.trim()) void render();
+    });
+    input.addEventListener("input", () => void render());
+    input.addEventListener("keydown", (e) => {
+      const opts = options();
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        if (list.hidden || opts.length === 0) return;
+        e.preventDefault();
+        // Cycles through -1 (back in the field) and every option.
+        const last = opts.length - 1;
+        if (e.key === "ArrowDown") setActive(active >= last ? -1 : active + 1);
+        else setActive(active <= -1 ? last : active - 1);
+      } else if (e.key === "Enter") {
+        const target = opts[active];
+        if (target) {
+          e.preventDefault();
+          location.href = target.href;
+        }
+      } else if (e.key === "Escape") {
+        close();
+        input.blur();
+        form.classList.remove("expanded");
+        opener?.setAttribute("aria-expanded", "false");
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!form.contains(e.target as Node)) close();
+    });
+
+    // "/" focuses the field from anywhere (SPEC §10.1).
+    document.addEventListener("keydown", (e) => {
+      const t = e.target as Element;
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (t.closest("input, textarea, select, [contenteditable]")) return;
+      e.preventDefault();
+      form.classList.add("expanded");
+      opener?.setAttribute("aria-expanded", "true");
+      input.focus();
+    });
+
+    // Narrow screens: the field collapses to an icon that expands it.
+    opener?.addEventListener("click", () => {
+      const open = !form.classList.contains("expanded");
+      form.classList.toggle("expanded", open);
+      opener.setAttribute("aria-expanded", String(open));
+      if (open) input.focus();
+    });
+  }
+</script>
+
+<style>
+  .searchbox {
+    position: relative;
+    flex: 1;
+    max-width: 24rem;
+    margin: 0;
+  }
+  input {
+    width: 100%;
+    font: inherit;
+    font-size: var(--fs-ui-lg);
+    color: var(--ink);
+    background: var(--raise);
+    border: 1px solid transparent;
+    border-radius: var(--r);
+    padding: 0.45em 0.9em;
+    outline: none;
+    transition:
+      border-color var(--t),
+      background var(--t);
+  }
+  input::placeholder {
+    color: var(--faint);
+  }
+  input:focus {
+    border-color: var(--line);
+    background: var(--raise-2);
+  }
+  input:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .open {
+    display: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    color: var(--muted);
+    border-radius: var(--r);
+    transition: color var(--t);
+  }
+  .open:hover {
+    color: var(--ink);
+  }
+  .sugg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 7;
+    list-style: none;
+    margin: 0;
+    background: var(--raise);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    padding: 0.35rem;
+  }
+  .sugg[hidden] {
+    display: none;
+  }
+  .sugg :global(a) {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6em;
+    text-decoration: none;
+    font-size: var(--fs-ui-lg);
+    padding: 0.45em 0.65em;
+    border-radius: calc(var(--r) - 3px);
+    transition: background var(--t-fast);
+  }
+  .sugg :global(a:hover),
+  .sugg :global(a[aria-selected="true"]) {
+    background: var(--raise-2);
+  }
+  .sugg :global(.who) {
+    color: var(--faint);
+    font-size: var(--fs-sm);
+    margin-left: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sugg :global(li:last-child) {
+    border-top: 1px solid var(--line);
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+  }
+  .sugg :global(.all) {
+    color: var(--muted);
+    font-size: var(--fs-ui);
+  }
+
+  @media (max-width: 640px) {
+    .searchbox {
+      flex: 0 0 auto;
+      max-width: none;
+      margin-left: auto;
+    }
+    .open {
+      display: grid;
+    }
+    input {
+      display: none;
+    }
+    .searchbox.expanded {
+      position: absolute;
+      left: var(--page-pad);
+      right: var(--page-pad);
+      z-index: 8;
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      background: var(--bg);
+    }
+    .searchbox.expanded input {
+      display: block;
+    }
+  }
+</style>

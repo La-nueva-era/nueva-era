@@ -1,0 +1,294 @@
+---
+// Full search (SPEC §10): verse-level results grouped by work, one verse of
+// context above and below, filters by author, collection and tag.
+import Base from "../layouts/Base.astro";
+import PageHead from "../components/PageHead.astro";
+import { es } from "../i18n/es.ts";
+import { loadEdition } from "../lib/edition.ts";
+import { SITE_NAME } from "../site.config.ts";
+
+const edition = await loadEdition();
+---
+
+<Base title={`${es.search.title} · ${SITE_NAME}`} noindex>
+  <PageHead title={es.search.title} />
+  <form
+    id="search-form"
+    class="filters indented"
+    action="/buscar"
+    method="get"
+    role="search"
+  >
+    <label class="q">
+      <span class="visually-hidden">{es.search.query}</span>
+      <input
+        name="q"
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder={es.search.placeholder}
+      />
+    </label>
+    <label>
+      <span>{es.search.author}</span>
+      <select name="autor">
+        <option value="">{es.search.any}</option>
+        {edition.authors.map((a) => (
+          <option value={a.id}>{a.name}</option>
+        ))}
+      </select>
+    </label>
+    {edition.collections.length > 0 && (
+      <label>
+        <span>{es.search.collection}</span>
+        <select name="coleccion">
+          <option value="">{es.search.anyF}</option>
+          {edition.collections.map((c) => (
+            <option value={c.id}>{c.title}</option>
+          ))}
+        </select>
+      </label>
+    )}
+    {edition.tags.length > 0 && (
+      <label>
+        <span>{es.search.tag}</span>
+        <select name="etiqueta">
+          <option value="">{es.search.anyF}</option>
+          {edition.tags.map((t) => (
+            <option value={t.id}>{t.title}</option>
+          ))}
+        </select>
+      </label>
+    )}
+  </form>
+  <p
+    id="search-status"
+    class="status indented"
+    role="status"
+    aria-live="polite"
+  ></p>
+  <div id="search-results" class="results indented"></div>
+</Base>
+
+<script>
+  import { es } from "../i18n/es.ts";
+  import { highlight, searchVerses, type VerseHit } from "../lib/search.ts";
+  import { getIndex } from "../scripts/search-index.ts";
+
+  const form = document.getElementById("search-form") as HTMLFormElement;
+  const status = document.getElementById("search-status") as HTMLElement;
+  const results = document.getElementById("search-results") as HTMLElement;
+  const field = (name: string) =>
+    form.elements.namedItem(name) as
+      HTMLInputElement | HTMLSelectElement | null;
+
+  // Restore the form from the URL.
+  const params = new URLSearchParams(location.search);
+  for (const name of ["q", "autor", "coleccion", "etiqueta"]) {
+    const el = field(name);
+    if (el && params.has(name)) el.value = params.get(name) ?? "";
+  }
+
+  function line(
+    text: string,
+    n: number,
+    url: string,
+    query: string,
+    hit: boolean,
+  ) {
+    const p = document.createElement(hit ? "a" : "p");
+    p.className = hit ? "line hit" : "line";
+    if (p instanceof HTMLAnchorElement) p.href = `${url}#v${n}`;
+    const num = document.createElement("span");
+    num.className = "n";
+    num.textContent = String(n);
+    p.append(num);
+    for (const part of hit ? highlight(text, query) : [{ text, hit: false }]) {
+      if (part.hit) {
+        const m = document.createElement("mark");
+        m.textContent = part.text;
+        p.append(m);
+      } else p.append(part.text);
+    }
+    return p;
+  }
+
+  async function run() {
+    const q = field("q")?.value.trim() ?? "";
+    const filters = {
+      author: field("autor")?.value || undefined,
+      collection: field("coleccion")?.value || undefined,
+      tag: field("etiqueta")?.value || undefined,
+    };
+    const url = new URL(location.href);
+    for (const name of ["q", "autor", "coleccion", "etiqueta"]) {
+      const v = field(name)?.value.trim();
+      if (v) url.searchParams.set(name, v);
+      else url.searchParams.delete(name);
+    }
+    history.replaceState(null, "", url);
+
+    if (!q) {
+      results.replaceChildren();
+      status.textContent = "";
+      return;
+    }
+    status.textContent = es.search.loading;
+    const index = await getIndex();
+    const hits = searchVerses(index, q, filters);
+
+    // Group by work, groups ordered by their best hit, verses in text order.
+    const groups = new Map<string, VerseHit[]>();
+    for (const h of hits)
+      groups.set(h.work, [...(groups.get(h.work) ?? []), h]);
+    status.textContent =
+      hits.length === 0
+        ? es.search.none
+        : es.search.count(hits.length, groups.size);
+
+    results.replaceChildren(
+      ...[...groups].map(([id, group]) => {
+        const w = index.works[id];
+        const section = document.createElement("section");
+        section.className = "group";
+        if (!w) return section;
+        const h = document.createElement("h2");
+        const a = document.createElement("a");
+        a.href = w.url;
+        a.textContent = w.title;
+        const who = document.createElement("span");
+        who.className = "who";
+        who.textContent = w.author;
+        h.append(a, " ", who);
+        section.append(h);
+        // One verse of context around each hit; hits whose context touches share a block.
+        const hitSet = new Set(group.map((x) => x.n));
+        const runs: [number, number][] = [];
+        for (const n of [...hitSet].sort((x, y) => x - y)) {
+          const last = runs.at(-1);
+          if (last && n - 1 <= last[1] + 1) last[1] = n + 1;
+          else runs.push([n - 1, n + 1]);
+        }
+        for (const [from, to] of runs) {
+          const block = document.createElement("div");
+          block.className = "hitblock";
+          const end = Math.min(w.verses.length, to);
+          for (let n = Math.max(1, from); n <= end; n++) {
+            block.append(
+              line(w.verses[n - 1] ?? "", n, w.url, q, hitSet.has(n)),
+            );
+          }
+          section.append(block);
+        }
+        return section;
+      }),
+    );
+  }
+
+  let timer: number | undefined;
+  form.addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = window.setTimeout(() => void run(), 150);
+  });
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    void run();
+  });
+  void run();
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--s-3) var(--s-4);
+    margin: 0 0 var(--s-6);
+  }
+  .filters label {
+    display: grid;
+    gap: var(--s-1);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+  .filters .q {
+    flex: 1 1 100%;
+  }
+  input,
+  select {
+    font: inherit;
+    font-size: var(--fs-ui-lg);
+    color: var(--ink);
+    background: var(--raise);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 0.45em 0.7em;
+  }
+  input {
+    width: 100%;
+  }
+  .status {
+    color: var(--muted);
+    font-size: var(--fs-ui);
+    min-height: 1.6em;
+    margin: 0 0 var(--s-6);
+  }
+  .results :global(.group) {
+    margin: 0 0 var(--s-10);
+  }
+  .results :global(h2) {
+    font-size: 1.15rem;
+    font-weight: 500;
+    margin: 0 0 var(--s-3);
+  }
+  .results :global(h2 a) {
+    text-decoration: none;
+  }
+  .results :global(h2 a:hover) {
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+  .results :global(.who) {
+    font-size: var(--fs-ui);
+    color: var(--faint);
+    font-weight: 400;
+  }
+  .results :global(.hitblock) {
+    margin: 0 0 var(--s-4);
+  }
+  .results :global(.line) {
+    position: relative;
+    display: block;
+    margin: 0;
+    color: var(--faint);
+    text-decoration: none;
+  }
+  .results :global(.line.hit) {
+    color: var(--ink);
+    border-radius: var(--r-xs);
+    transition: background var(--t);
+  }
+  .results :global(.line.hit:hover) {
+    background: var(--hl);
+  }
+  .results :global(.n) {
+    position: absolute;
+    left: calc(-1 * var(--gutter));
+    width: calc(var(--gutter) - var(--vn-gap));
+    text-align: right;
+    font-size: 0.85em;
+    color: var(--faint);
+    opacity: 0.7;
+    font-feature-settings:
+      "tnum" 1,
+      "onum" 1;
+  }
+  .results :global(mark) {
+    background: none;
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+    text-decoration-color: var(--muted);
+  }
+</style>

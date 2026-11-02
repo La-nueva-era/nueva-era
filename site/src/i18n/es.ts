@@ -48,6 +48,23 @@ export const es = {
     toastQuote: "Cita copiada", // [mockup]
     toastFailed: "No se pudo copiar", // [PROPOSED]
   },
+  search: {
+    label: "Buscar", // [mockup]
+    placeholder: "Buscar en la obra…  ( / )", // [mockup]
+    open: "Abrir la búsqueda", // [PROPOSED]
+    inVerses: (q: string) => `Buscar «${q}» en los versos →`, // [mockup]
+    title: "Buscar", // [PROPOSED]
+    query: "Palabras", // [PROPOSED]
+    author: "Autor", // [PROPOSED]
+    collection: "Colección", // [PROPOSED]
+    tag: "Etiqueta", // [PROPOSED]
+    any: "Todos", // [PROPOSED]
+    anyF: "Todas", // [PROPOSED]
+    loading: "Cargando el índice…", // [PROPOSED]
+    none: "Sin resultados.", // [PROPOSED]
+    count: (verses: number, works: number) =>
+      `${verses === 1 ? "1 verso" : `${verses} versos`} en ${works === 1 ? "1 obra" : `${works} obras`}`, // [PROPOSED]
+  },
   pages: {
     works: "Obras", // [PROPOSED]
     collections: "Colecciones", // [PROPOSED] (URL /colecciones is [spec])
