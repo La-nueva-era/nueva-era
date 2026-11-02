@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+content/
+docs/
+odd/
+.atl/
+*.md

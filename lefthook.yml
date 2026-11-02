@@ -1,0 +1,5 @@
+pre-commit:
+  jobs:
+    - name: lint-content
+      glob: "content/**"
+      run: pnpm lint:content

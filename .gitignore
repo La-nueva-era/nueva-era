@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+site/dist/
+site/.astro/
+coverage/
+*.log
+.DS_Store
+.env
+.env.*
