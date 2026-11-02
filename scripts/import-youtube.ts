@@ -82,6 +82,7 @@ for (const dir of readdirSync(CONTENT, { withFileTypes: true })) {
 const known = existingVideoIds(works);
 
 let written = 0;
+let skipped = 0;
 for (const { author, urls } of sources()) {
   for (const url of urls) {
     const listed = ytdlp(["--flat-playlist", "--print", "id", url])
@@ -92,12 +93,15 @@ for (const { author, urls } of sources()) {
       `${author} · ${url}: ${listed.length} videos, ${fresh.length} new`,
     );
     for (const id of fresh) {
-      const json = ytdlp([
-        "-j",
-        `https://www.youtube.com/watch?v=${id}`,
-      ]).trim();
+      let json = "";
+      try {
+        json = ytdlp(["-j", `https://www.youtube.com/watch?v=${id}`]).trim();
+      } catch {
+        // yt-dlp already printed why (age-restricted, private, members only…).
+      }
       if (!json) {
-        console.log(`  skip ${id}: no metadata`);
+        console.log(`  skip ${id}: yt-dlp could not fetch its metadata`);
+        skipped++;
         continue;
       }
       const v = JSON.parse(json) as Video;
@@ -123,4 +127,5 @@ for (const { author, urls } of sources()) {
     }
   }
 }
-console.log(`${written} draft stubs written`);
+console.log(`${written} draft stubs written, ${skipped} videos skipped`);
+process.exit(skipped > 0 ? 1 : 0);
