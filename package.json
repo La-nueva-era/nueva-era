@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "lint:content": "tsx scripts/lint-content.ts",
     "typecheck": "astro check --root site && tsc --noEmit -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "import:youtube": "tsx scripts/import-youtube.ts"
   },
   "dependencies": {
     "@fontsource/literata": "^5.3.0",
