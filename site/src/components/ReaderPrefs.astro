@@ -1,0 +1,137 @@
+---
+// Reader preferences (SPEC §8.8, §11): verse numbers and theme, in localStorage.
+import { es } from "../i18n/es.ts";
+---
+
+<button
+  id="prefs-btn"
+  class="prefs-btn"
+  type="button"
+  aria-expanded="false"
+  aria-controls="prefs"
+  aria-label={es.prefs.open}
+>
+  Aa
+</button>
+<div id="prefs" class="prefs" hidden>
+  <p class="prefs-title">{es.prefs.title}</p>
+  <label for="prefs-nums">{es.prefs.nums}</label>
+  <select id="prefs-nums" data-pref="nums">
+    <option value="all">{es.prefs.numsAll}</option>
+    <option value="every5">{es.prefs.numsEvery5}</option>
+    <option value="none">{es.prefs.numsNone}</option>
+  </select>
+  <label for="prefs-theme">{es.prefs.theme}</label>
+  <select id="prefs-theme" data-pref="theme">
+    <option value="dark">{es.prefs.themeDark}</option>
+    <option value="light">{es.prefs.themeLight}</option>
+  </select>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const btn = document.getElementById("prefs-btn");
+  const panel = document.getElementById("prefs");
+
+  const current = (pref: string): string => {
+    if (pref === "nums") return root.dataset.nums ?? "all";
+    return (
+      root.dataset.theme ??
+      (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+    );
+  };
+
+  for (const select of document.querySelectorAll<HTMLSelectElement>(
+    "select[data-pref]",
+  )) {
+    const pref = select.dataset.pref ?? "";
+    select.value = current(pref);
+    select.addEventListener("change", () => {
+      root.dataset[pref] = select.value;
+      try {
+        localStorage.setItem(`lne-${pref}`, select.value);
+      } catch {
+        // Storage unavailable: the choice lasts for this page only.
+      }
+    });
+  }
+
+  const setOpen = (open: boolean) => {
+    if (!btn || !panel) return;
+    panel.hidden = !open;
+    btn.setAttribute("aria-expanded", String(open));
+  };
+  btn?.addEventListener("click", () => setOpen(panel?.hidden === true));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panel && !panel.hidden) {
+      setOpen(false);
+      btn?.focus();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    const t = e.target as Element;
+    if (!t.closest("#prefs, #prefs-btn")) setOpen(false);
+  });
+</script>
+
+<style>
+  .prefs-btn {
+    position: fixed;
+    right: var(--s-4);
+    bottom: var(--s-4);
+    z-index: 9;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    background: var(--raise);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    box-shadow: var(--shadow);
+    color: var(--muted);
+    font-size: 0.95rem;
+    transition: color var(--t);
+  }
+  .prefs-btn:hover {
+    color: var(--ink);
+  }
+  .prefs {
+    position: fixed;
+    right: var(--s-4);
+    bottom: 4.1rem;
+    z-index: 9;
+    width: 15.5rem;
+    background: var(--raise);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    padding: var(--s-4) var(--s-4) var(--s-4);
+  }
+  .prefs[hidden] {
+    display: none;
+  }
+  .prefs-title {
+    margin: 0 0 var(--s-3);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    font-variant: small-caps;
+    letter-spacing: var(--tracking-caps);
+    color: var(--faint);
+  }
+  label {
+    display: block;
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    margin: var(--s-2) 0 var(--s-1);
+  }
+  select {
+    width: 100%;
+    font: inherit;
+    font-size: var(--fs-ui);
+    color: var(--ink);
+    background: var(--raise-2);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 0.3em 0.4em;
+  }
+</style>

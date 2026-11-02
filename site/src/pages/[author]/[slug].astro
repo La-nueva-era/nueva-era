@@ -1,0 +1,785 @@
+---
+// Work page (SPEC §8). Reference design: docs/design/work-page.html.
+import Base from "../../layouts/Base.astro";
+import ReaderPrefs from "../../components/ReaderPrefs.astro";
+import VideoFacade from "../../components/VideoFacade.astro";
+import { es, formatDate } from "../../i18n/es.ts";
+import { cite } from "../../lib/cite.ts";
+import { loadEdition, plain, type Work } from "../../lib/edition.ts";
+import { segments } from "../../lib/parse.ts";
+import { SITE_NAME } from "../../site.config.ts";
+
+export async function getStaticPaths() {
+  const { works } = await loadEdition();
+  return works.map((work) => ({
+    params: { author: work.meta.author, slug: work.slug },
+    props: { id: work.id },
+  }));
+}
+
+const { id } = Astro.props as { id: string };
+const edition = await loadEdition();
+const work = edition.byId.get(id) as Work;
+const { meta, author } = work;
+
+const linkable = (wid: string) => {
+  const w = edition.byId.get(wid);
+  return w?.public ? w : undefined;
+};
+const seriesTitle = (kind: "collections" | "tags", sid: string) =>
+  (kind === "collections" ? edition.collections : edition.tags).find(
+    (s) => s.id === sid,
+  )?.title ?? sid;
+const seriesUrl = (kind: "collections" | "tags", sid: string) =>
+  `/${kind === "collections" ? "colecciones" : "etiquetas"}/${sid}`;
+
+const marks = [
+  ...(meta.collections ?? []).map((m) => ({
+    kind: "collections" as const,
+    ...m,
+  })),
+  ...(meta.tags ?? []).map((m) => ({ kind: "tags" as const, ...m })),
+];
+
+const notes = (meta.notes ?? []).map((n, i) => ({ ...n, id: `n${i + 1}` }));
+const notesByVerse = new Map<number, typeof notes>();
+for (const n of notes) {
+  if (n.verse !== undefined)
+    notesByVerse.set(n.verse, [...(notesByVerse.get(n.verse) ?? []), n]);
+}
+
+const sources = meta.sources ?? [];
+const descriptions = sources.filter((s) => s.kind === "youtube-description");
+const links = sources.filter((s) => s.kind !== "youtube-description");
+const linkNote = (kind: string) =>
+  kind === "community-post"
+    ? es.work.communityPost
+    : kind === "patreon"
+      ? es.work.patreon
+      : es.work.external;
+
+const d = work.derived;
+const related = (meta.related ?? [])
+  .map(linkable)
+  .filter((w) => w !== undefined);
+const relatedFrom = d.relatedFrom.map(linkable).filter((w) => w !== undefined);
+const mentionedIn = d.mentionedIn.map(linkable).filter((w) => w !== undefined);
+const mentionsAuthors = edition.authors.filter((a) =>
+  d.mentionsAuthors.includes(a.id),
+);
+const neighbours = d.neighbours.filter((n) => n.prev || n.next);
+const hasAround =
+  neighbours.length +
+    related.length +
+    relatedFrom.length +
+    mentionedIn.length +
+    mentionsAuthors.length >
+  0;
+
+const description = work.stanzas
+  .flatMap((s) => s.lines)
+  .filter((l) => l.kind === "verse")
+  .slice(0, 2)
+  .map((l) => plain(l.text))
+  .join(" / ");
+const youtubeUrl = `https://www.youtube.com/watch?v=${meta.youtube.id}`;
+---
+
+<Base
+  title={`«${meta.title}» — ${author.name} · ${SITE_NAME}`}
+  description={description || undefined}
+  noindex={!work.public}
+>
+  <div class="titlebar indented">
+    <div>
+      <h1>
+        {meta.title}
+        {meta.status === "draft" && <span class="draft">{es.work.draft}</span>}
+      </h1>
+      <p class="byline">
+        <a href={`/${author.id}`}>{author.name}</a>
+      </p>
+      {marks.length > 0 && (
+        <p class="marks">
+          {marks.map((m) => (
+            <a class="mark" href={seriesUrl(m.kind, m.id)}>
+              {m.position !== undefined && (
+                <span class="num">{m.position}</span>
+              )}
+              {seriesTitle(m.kind, m.id)}
+            </a>
+          ))}
+        </p>
+      )}
+    </div>
+    <div class="copygroup" data-cite={cite(work.citable)}>
+      <button id="copy-main" type="button" title={es.work.copyTitle}>
+        <svg
+          class="mi"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          aria-hidden="true"
+        >
+          <rect x="9" y="9" width="12" height="12" rx="2"></rect>
+          <path d="M5 15V5a2 2 0 0 1 2-2h10"></path>
+        </svg>
+        {es.work.copy}
+      </button>
+      <button
+        id="copy-more"
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded="false"
+        aria-controls="copy-menu"
+        aria-label={es.work.copyMore}
+      >
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6"></path>
+        </svg>
+      </button>
+      <div class="menu" id="copy-menu" role="menu" hidden>
+        <button id="m-link" type="button" role="menuitem">
+          <svg
+            class="mi"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <path d="M10 14a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path>
+            <path d="M14 10a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path>
+          </svg>
+          {es.work.copyPageLink}
+        </button>
+        <a href={youtubeUrl} target="_blank" rel="noopener" role="menuitem">
+          <svg
+            class="mi"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <polygon points="6 4 20 12 6 20"></polygon>
+          </svg>
+          {es.work.watchOnYouTube}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <VideoFacade id={meta.youtube.id} title={`${author.name} — ${meta.title}`} />
+
+  <article class="poem indented" id="texto" lang="es">
+    {work.stanzas.map((stanza) => (
+      <div class="stanza">
+        {stanza.lines.map((line) =>
+          line.kind === "label" ? (
+            <p class="label">{line.name}</p>
+          ) : (
+            <p
+              class:list={["verse", { m5: line.n % 5 === 0 }]}
+              id={`v${line.n}`}
+            >
+              <a
+                class="vn"
+                href={`#v${line.n}`}
+                title={es.work.verseLink(line.n)}
+              >
+                {line.n}
+              </a>
+              {segments(line.text).map((s) =>
+                s.kind === "text" ? (
+                  s.text
+                ) : (
+                  <span
+                    class="unsure"
+                    title={
+                      notesByVerse.has(line.n)
+                        ? es.work.uncertainWithNote
+                        : es.work.uncertain
+                    }
+                  >
+                    {s.text}
+                  </span>
+                ),
+              )}
+              {(notesByVerse.get(line.n) ?? []).map((n) => (
+                <sup class="nref">
+                  <button
+                    type="button"
+                    data-note={n.id}
+                    aria-label={es.work.noteOpen(line.n)}
+                    aria-expanded="false"
+                  >
+                    °
+                  </button>
+                </sup>
+              ))}
+            </p>
+          ),
+        )}
+      </div>
+    ))}
+  </article>
+
+  {notes.length > 0 && (
+    <section class="block notes indented" aria-labelledby="h-notas">
+      <h2 id="h-notas">{es.work.notes}</h2>
+      <ol>
+        {notes.map((n) => (
+          <li id={n.id}>
+            <span class="nv">
+              {n.verse === undefined ? es.work.noVerse : `v. ${n.verse}`}
+            </span>
+            <span class="nt">{n.text.trim()}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+
+  {sources.length > 0 && (
+    <section class="block extra indented" aria-labelledby="h-extra">
+      <h2 id="h-extra">{es.work.extra}</h2>
+      {descriptions.map((s) => (
+        <figure class="desc">
+          <blockquote>{s.text.trim()}</blockquote>
+          <figcaption>
+            {es.work.description} · {formatDate(s.date)}
+          </figcaption>
+        </figure>
+      ))}
+      {links.length > 0 && (
+        <ul>
+          {links.map((s) => (
+            <li>
+              <a href={s.url} rel="noopener">
+                {s.title}
+              </a>
+              <span class="when">
+                {linkNote(s.kind)}
+                {s.date && ` · ${formatDate(s.date)}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )}
+
+  {hasAround && (
+    <section class="block related indented" aria-labelledby="h-rel">
+      <h2 id="h-rel">{es.work.around}</h2>
+      <dl>
+        {neighbours.map((n) => (
+          <>
+            <dt>{seriesTitle(n.kind, n.id)}</dt>
+            <dd>
+              {[n.prev, n.next]
+                .filter((x) => x !== undefined)
+                .map((x) => {
+                  const w = edition.byId.get(x.id);
+                  return (
+                    w && (
+                      <span class="item">
+                        {x.position !== undefined && (
+                          <span class="pos">{x.position}</span>
+                        )}
+                        <a href={w.url}>{w.meta.title}</a>
+                      </span>
+                    )
+                  );
+                })}
+            </dd>
+          </>
+        ))}
+        {[
+          [es.work.related, related],
+          [es.work.relatedFrom, relatedFrom],
+          [es.work.mentionedIn, mentionedIn],
+        ].map(
+          ([label, list]) =>
+            (list as Work[]).length > 0 && (
+              <>
+                <dt>{label as string}</dt>
+                <dd>
+                  {(list as Work[]).map((w) => (
+                    <span class="item">
+                      <a href={w.url}>{w.meta.title}</a>
+                    </span>
+                  ))}
+                </dd>
+              </>
+            ),
+        )}
+        {mentionsAuthors.length > 0 && (
+          <>
+            <dt>{es.work.mentions}</dt>
+            <dd>
+              {mentionsAuthors.map((a) => (
+                <span class="item">
+                  <a href={`/${a.id}`}>{a.name}</a>
+                </span>
+              ))}
+            </dd>
+          </>
+        )}
+      </dl>
+    </section>
+  )}
+
+  <Fragment slot="after">
+    <ReaderPrefs />
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </Fragment>
+</Base>
+
+<script>
+  import "../../scripts/work.ts";
+</script>
+
+<style>
+  /* Title block */
+  .titlebar {
+    margin: var(--s-14) 0 0;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--s-4);
+    justify-content: space-between;
+  }
+  h1 {
+    font-size: var(--fs-h1);
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  .draft {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: var(--s-2);
+    padding: 0.1em 0.5em;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    font-weight: 400;
+    font-variant: small-caps;
+    letter-spacing: var(--tracking-caps);
+    color: var(--muted);
+  }
+  .byline {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-lead);
+    color: var(--muted);
+  }
+  .byline a {
+    text-decoration: none;
+  }
+  .byline a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+  .marks {
+    margin: var(--s-3) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    font-size: 0.86rem;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0.28em 0.75em 0.28em 0.28em;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    transition:
+      color var(--t),
+      border-color var(--t);
+  }
+  .mark:hover {
+    color: var(--ink);
+    border-color: var(--faint);
+  }
+  .mark .num {
+    display: grid;
+    place-items: center;
+    min-width: 1.5em;
+    height: 1.5em;
+    border: 1px solid var(--line);
+    border-radius: var(--r-xs);
+    font-size: 0.92em;
+    font-feature-settings: "tnum" 1;
+    color: var(--ink);
+    transition: border-color var(--t);
+  }
+  .mark:hover .num {
+    border-color: var(--faint);
+  }
+
+  /* Copy control */
+  .copygroup {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    margin-top: var(--s-2);
+  }
+  .copygroup > button {
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    font-size: var(--fs-ui);
+    color: var(--muted);
+    background: var(--raise);
+    padding: 0.5em 0.8em;
+    transition:
+      color var(--t),
+      background var(--t);
+  }
+  .copygroup > button:hover {
+    color: var(--ink);
+    background: var(--raise-2);
+  }
+  #copy-main {
+    border-radius: var(--r) 0 0 var(--r);
+  }
+  #copy-more {
+    border-radius: 0 var(--r) var(--r) 0;
+    border-left: 1px solid var(--line);
+    padding: 0.5em 0.55em;
+  }
+  .menu,
+  :global(.selmenu) {
+    background: var(--raise);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    padding: 0.35rem;
+  }
+  .menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 7;
+    min-width: 15.5rem;
+  }
+  .menu[hidden] {
+    display: none;
+  }
+  .menu button,
+  .menu a,
+  :global(.selmenu button) {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    width: 100%;
+    font-size: 0.88rem;
+    color: var(--ink);
+    text-decoration: none;
+    text-align: left;
+    padding: 0.5em 0.65em;
+    border-radius: calc(var(--r) - 3px);
+    transition: background var(--t-fast);
+  }
+  .menu button:hover,
+  .menu a:hover,
+  .menu :focus-visible,
+  :global(.selmenu button:hover) {
+    background: var(--raise-2);
+  }
+  .menu .mi,
+  :global(.selmenu .mi) {
+    color: var(--faint);
+  }
+  @media (max-width: 640px) {
+    .titlebar {
+      flex-direction: column;
+    }
+    .menu {
+      left: 0;
+      right: auto;
+    }
+  }
+
+  /* Poem */
+  .poem {
+    margin: var(--s-14) 0 0;
+  }
+  .stanza {
+    margin: 0 0 calc(var(--fs) * var(--lh));
+  }
+  .verse,
+  .label {
+    position: relative;
+    margin: 0;
+  }
+  .verse {
+    border-radius: var(--r-xs);
+    padding-left: 1.5em;
+    text-indent: -1.5em;
+    transition: background var(--t);
+  }
+  .label {
+    font-variant: small-caps;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .vn {
+    position: absolute;
+    left: calc(-1 * var(--gutter));
+    top: 0;
+    width: calc(var(--gutter) - var(--vn-gap));
+    text-align: right;
+    text-indent: 0;
+    font-size: 0.85em;
+    line-height: calc(var(--fs) * var(--lh) / 0.85);
+    color: var(--faint);
+    opacity: 0.55;
+    font-feature-settings:
+      "tnum" 1,
+      "onum" 1;
+    text-decoration: none;
+    user-select: none;
+    transition:
+      color var(--t),
+      opacity var(--t);
+  }
+  :global(html[data-nums="every5"]) .verse:not(.m5) .vn,
+  :global(html[data-nums="none"]) .verse .vn {
+    opacity: 0;
+  }
+  .verse:hover .vn,
+  .verse:target .vn,
+  .verse:global(.hl) .vn,
+  .vn:focus-visible {
+    opacity: 0.9;
+  }
+  .vn:hover {
+    color: var(--ink);
+    opacity: 1;
+  }
+  .verse:target,
+  .verse:global(.hl) {
+    background: var(--hl);
+  }
+  .unsure {
+    text-decoration: underline dotted var(--muted);
+    text-underline-offset: 0.22em;
+    cursor: help;
+  }
+  .nref {
+    font-size: 1em;
+    line-height: 0;
+    vertical-align: baseline;
+  }
+  .nref button {
+    display: inline-grid;
+    place-items: center;
+    vertical-align: 0.35em;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    margin-left: 0.18em;
+    border-radius: 50%;
+    font-size: var(--fs-xs);
+    color: var(--muted);
+    background: var(--raise);
+    text-indent: 0;
+    transition:
+      color var(--t),
+      background var(--t);
+  }
+  .nref button:hover,
+  .nref button[aria-expanded="true"] {
+    color: var(--ink);
+    background: var(--raise-2);
+  }
+  .poem :global(aside.note-inline) {
+    margin: 0.7rem 0 0.9rem;
+    padding: 0.85rem 2.3rem 0.85rem var(--s-4);
+    position: relative;
+    background: var(--raise);
+    border-radius: var(--r);
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: var(--lh);
+    box-shadow: var(--shadow);
+  }
+  .poem :global(aside.note-inline .lead) {
+    font-style: italic;
+    color: var(--ink);
+    margin-right: 0.4em;
+  }
+  .poem :global(aside.note-inline .close) {
+    position: absolute;
+    right: 0.6rem;
+    top: 0.5rem;
+    color: var(--faint);
+    line-height: 1;
+    padding: 0.15em;
+    transition: color var(--t);
+  }
+  .poem :global(aside.note-inline .close:hover) {
+    color: var(--ink);
+  }
+  :global(.selmenu) {
+    position: absolute;
+    z-index: 8;
+    transform: translate(-50%, -112%);
+    min-width: 14.5rem;
+  }
+  :global(.chip-clear) {
+    position: fixed;
+    left: 50%;
+    bottom: 1.4rem;
+    transform: translateX(-50%);
+    z-index: 8;
+    background: var(--raise);
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow);
+    padding: 0.5em 1.05em;
+    font-size: 0.84rem;
+    color: var(--muted);
+    transition: color var(--t);
+  }
+  :global(.chip-clear:hover) {
+    color: var(--ink);
+  }
+
+  /* Sections */
+  .block {
+    margin: var(--s-16) 0 0;
+  }
+  .block > h2 {
+    font-size: var(--fs-ui-lg);
+    font-weight: 500;
+    margin: 0 0 1.1rem;
+    font-variant: small-caps;
+    letter-spacing: var(--tracking-caps);
+    color: var(--muted);
+  }
+  .notes ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+    line-height: 1.62;
+  }
+  .notes li {
+    margin: 0 0 0.7rem;
+    padding-left: 2.7rem;
+    text-indent: -2.7rem;
+  }
+  .notes .nv {
+    display: inline-block;
+    width: 2.7rem;
+    text-indent: 0;
+    color: var(--faint);
+    font-style: italic;
+    font-feature-settings: "tnum";
+  }
+  .notes li:target {
+    color: var(--ink);
+  }
+  .desc {
+    margin: 0 0 1.1rem;
+  }
+  .desc blockquote {
+    margin: 0;
+    font-size: 0.97rem;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.65;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+  .desc figcaption,
+  .when {
+    color: var(--faint);
+    font-size: var(--fs-ui);
+  }
+  .desc figcaption {
+    margin-top: var(--s-1);
+  }
+  .extra ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.96rem;
+    line-height: 1.85;
+  }
+  .extra li {
+    color: var(--muted);
+  }
+  .when {
+    margin-left: 0.5em;
+  }
+  .related dl {
+    margin: 0;
+    line-height: 1.85;
+  }
+  .related dt {
+    font-style: italic;
+    color: var(--muted);
+    margin: 0 0 0.1rem;
+    font-size: 0.96rem;
+  }
+  .related dd {
+    margin: 0 0 0.9rem;
+    font-size: 0.98rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--s-5);
+  }
+  .related .pos {
+    color: var(--faint);
+    font-feature-settings: "tnum";
+    font-size: var(--fs-ui);
+    margin-right: 0.4em;
+  }
+
+  /* Toast */
+  :global(.toast) {
+    position: fixed;
+    left: 50%;
+    bottom: 1.4rem;
+    transform: translateX(-50%) translateY(6px);
+    z-index: 10;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 0.84rem;
+    padding: 0.55em 1.15em;
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--t-slow),
+      transform var(--t-slow);
+  }
+  :global(.toast.on) {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>

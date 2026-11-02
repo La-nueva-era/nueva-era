@@ -1,3 +1,5 @@
+// Pure lib modules are also checked here; edition.ts needs astro:content and is
+// checked by astro check instead.
 {
   "extends": "astro/tsconfigs/strictest",
   "compilerOptions": {
@@ -5,5 +7,6 @@
     "allowImportingTsExtensions": true,
     "types": ["node"]
   },
-  "include": ["scripts/**/*.ts", "site/src/lib/**/*.ts", "vitest.config.ts"]
+  "include": ["scripts/**/*.ts", "site/src/lib/**/*.ts", "vitest.config.ts"],
+  "exclude": ["site/src/lib/edition.ts"]
 }

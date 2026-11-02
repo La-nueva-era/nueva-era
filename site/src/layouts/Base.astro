@@ -1,0 +1,56 @@
+---
+import { Font } from "astro:assets";
+import SiteHeader from "../components/SiteHeader.astro";
+import { es } from "../i18n/es.ts";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string | undefined;
+  noindex?: boolean | undefined;
+}
+
+const { title, description, noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="es" data-nums="all">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <script is:inline>
+      // Reader preferences before first paint (no theme flash).
+      try {
+        const r = document.documentElement;
+        const t = localStorage.getItem("lne-theme");
+        if (t === "dark" || t === "light") r.dataset.theme = t;
+        const n = localStorage.getItem("lne-nums");
+        if (n === "all" || n === "every5" || n === "none") r.dataset.nums = n;
+      } catch {
+        // Storage unavailable: defaults apply.
+      }
+    </script>
+    <Font
+      cssVariable="--font-literata"
+      preload={[{ weight: "400", style: "normal" }]}
+    />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      {es.site.skip}
+    </a>
+    <div class="wrap">
+      <SiteHeader />
+      <main id="main">
+        <slot />
+      </main>
+    </div>
+    <slot name="after" />
+  </body>
+</html>
