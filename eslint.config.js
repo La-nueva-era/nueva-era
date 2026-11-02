@@ -18,4 +18,16 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   ...astro.configs.recommended,
   { languageOptions: { globals: { ...globals.node } } },
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 );
