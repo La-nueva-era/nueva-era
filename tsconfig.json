@@ -1,5 +1,5 @@
-// Pure lib modules are also checked here; edition.ts needs astro:content and is
-// checked by astro check instead.
+// Type-checks the Node scripts and the pure modules they import. Everything
+// under site/ is checked by `astro check` with site/tsconfig.json.
 {
   "extends": "astro/tsconfigs/strictest",
   "compilerOptions": {
@@ -7,6 +7,5 @@
     "allowImportingTsExtensions": true,
     "types": ["node"]
   },
-  "include": ["scripts/**/*.ts", "site/src/lib/**/*.ts", "vitest.config.ts"],
-  "exclude": ["site/src/lib/edition.ts"]
+  "include": ["scripts/**/*.ts", "vitest.config.ts"]
 }
