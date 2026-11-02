@@ -3,3 +3,6 @@
 export const SITE_URL = "https://lanuevaera.art";
 
 export const SITE_NAME = "La nueva era";
+
+// Order of the authors wherever both are listed (SPEC §7.1: Solitario, Ozelot).
+export const AUTHOR_ORDER = ["solitario", "ozelot"];

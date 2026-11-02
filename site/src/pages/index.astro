@@ -1,0 +1,74 @@
+---
+// Home (SPEC §7): the edition's statement, the two poets, entry points.
+// The statement is the editor's text and is not written yet; this page shows
+// only what is derived from the data.
+import Base from "../layouts/Base.astro";
+import { es } from "../i18n/es.ts";
+import { loadEdition } from "../lib/edition.ts";
+import { SITE_NAME } from "../site.config.ts";
+
+const edition = await loadEdition();
+const count = (id: string) =>
+  edition.works.filter((w) => w.public && w.meta.author === id).length;
+---
+
+<Base title={SITE_NAME}>
+  <div class="home indented">
+    <h1>{SITE_NAME}</h1>
+    <ul class="poets">
+      {edition.authors.map((a) => (
+        <li>
+          <a href={`/${a.id}`}>{a.name}</a>
+          <span class="meta">{es.pages.workCount(count(a.id))}</span>
+        </li>
+      ))}
+    </ul>
+    <nav class="entries" aria-label={es.nav.label}>
+      <a href="/cronologia">{es.pages.chronology}</a>
+      <a href="/colecciones">{es.pages.collections}</a>
+      <a href="/etiquetas">{es.pages.tags}</a>
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .home {
+    margin: var(--s-16) 0 0;
+  }
+  h1 {
+    font-size: var(--fs-h1);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 var(--s-10);
+  }
+  .poets {
+    list-style: none;
+    margin: 0 0 var(--s-10);
+    padding: 0;
+    font-size: 1.4rem;
+  }
+  .poets li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    padding: var(--s-2) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .poets a {
+    text-decoration: none;
+  }
+  .poets a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+  .meta {
+    font-size: var(--fs-ui);
+    color: var(--faint);
+  }
+  .entries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-6);
+    color: var(--muted);
+  }
+</style>

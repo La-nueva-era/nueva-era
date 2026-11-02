@@ -1,0 +1,148 @@
+---
+// A list of works as rows: date, title, author (optional), series marks.
+// No cards, no thumbnails (SPEC §11).
+import { es, formatDate } from "../i18n/es.ts";
+import type { Edition, Work } from "../lib/edition.ts";
+import { seriesTitle, seriesUrl } from "../lib/series.ts";
+import SeriesMark from "./SeriesMark.astro";
+
+interface Props {
+  works: Work[];
+  edition: Edition;
+  /** Show the author on each row (mixed lists). */
+  showAuthor?: boolean;
+  /** Show the position in this series instead of the date. */
+  positionIn?: { kind: "collections" | "tags"; id: string } | undefined;
+  /** Hide the series marks (e.g. on the series page itself). */
+  marks?: boolean;
+}
+const {
+  works,
+  edition,
+  showAuthor = false,
+  positionIn,
+  marks = true,
+} = Astro.props;
+
+const dateFmt = new Intl.DateTimeFormat("es", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const date = (iso: string) => dateFmt.format(new Date(`${iso}T00:00:00Z`));
+const positionOf = (w: Work) =>
+  positionIn
+    ? w.meta[positionIn.kind]?.find((m) => m.id === positionIn.id)?.position
+    : undefined;
+---
+
+<ol class:list={["works", { positions: positionIn }]}>
+  {works.map((w) => (
+    <li>
+      <span class="lead">
+        {positionIn ? (
+          positionOf(w)
+        ) : (
+          <time datetime={w.meta.youtube.published}>
+            {date(w.meta.youtube.published)}
+          </time>
+        )}
+      </span>
+      <span class="body">
+        <a class="title" href={w.url}>
+          {w.meta.title}
+        </a>
+        {w.meta.status === "draft" && (
+          <span class="draft">{es.work.draft}</span>
+        )}
+        {showAuthor && <span class="who">{w.author.name}</span>}
+        {w.meta.composed != null && (
+          <span class="who">
+            {es.pages.composed(
+              typeof w.meta.composed === "number"
+                ? String(w.meta.composed)
+                : formatDate(w.meta.composed),
+            )}
+          </span>
+        )}
+        {marks &&
+          [
+            ...(w.meta.collections ?? []).map((m) => ({
+              kind: "collections" as const,
+              ...m,
+            })),
+            ...(w.meta.tags ?? []).map((m) => ({
+              kind: "tags" as const,
+              ...m,
+            })),
+          ].map((m) => (
+            <SeriesMark
+              href={seriesUrl(m.kind, m.id)}
+              title={seriesTitle(edition, m.kind, m.id)}
+              position={m.position}
+              small
+            />
+          ))}
+      </span>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .works {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: var(--s-4);
+    align-items: baseline;
+    padding: var(--s-2) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .positions li {
+    grid-template-columns: 2rem 1fr;
+  }
+  .positions .lead {
+    text-align: right;
+  }
+  .lead {
+    color: var(--faint);
+    font-size: var(--fs-ui);
+    font-feature-settings:
+      "tnum" 1,
+      "onum" 1;
+  }
+  .body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-1) var(--s-3);
+  }
+  .title {
+    text-decoration: none;
+  }
+  .title:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+  .who {
+    color: var(--muted);
+    font-size: var(--fs-ui);
+  }
+  .draft {
+    font-size: var(--fs-sm);
+    font-variant: small-caps;
+    letter-spacing: var(--tracking-caps);
+    color: var(--faint);
+  }
+  @media (max-width: 640px) {
+    li {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
+</style>

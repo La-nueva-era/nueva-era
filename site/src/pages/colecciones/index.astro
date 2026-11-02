@@ -1,0 +1,8 @@
+---
+import SeriesIndex from "../../components/SeriesIndex.astro";
+import { loadEdition } from "../../lib/edition.ts";
+
+const edition = await loadEdition();
+---
+
+<SeriesIndex edition={edition} kind="collections" />

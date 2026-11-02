@@ -2,11 +2,13 @@
 // Work page (SPEC §8). Reference design: docs/design/work-page.html.
 import Base from "../../layouts/Base.astro";
 import ReaderPrefs from "../../components/ReaderPrefs.astro";
+import SeriesMark from "../../components/SeriesMark.astro";
 import VideoFacade from "../../components/VideoFacade.astro";
 import { es, formatDate } from "../../i18n/es.ts";
 import { cite } from "../../lib/cite.ts";
 import { loadEdition, plain, type Work } from "../../lib/edition.ts";
 import { segments } from "../../lib/parse.ts";
+import { seriesTitle, seriesUrl } from "../../lib/series.ts";
 import { SITE_NAME } from "../../site.config.ts";
 
 export async function getStaticPaths() {
@@ -26,13 +28,6 @@ const linkable = (wid: string) => {
   const w = edition.byId.get(wid);
   return w?.public ? w : undefined;
 };
-const seriesTitle = (kind: "collections" | "tags", sid: string) =>
-  (kind === "collections" ? edition.collections : edition.tags).find(
-    (s) => s.id === sid,
-  )?.title ?? sid;
-const seriesUrl = (kind: "collections" | "tags", sid: string) =>
-  `/${kind === "collections" ? "colecciones" : "etiquetas"}/${sid}`;
-
 const marks = [
   ...(meta.collections ?? []).map((m) => ({
     kind: "collections" as const,
@@ -102,12 +97,11 @@ const youtubeUrl = `https://www.youtube.com/watch?v=${meta.youtube.id}`;
       {marks.length > 0 && (
         <p class="marks">
           {marks.map((m) => (
-            <a class="mark" href={seriesUrl(m.kind, m.id)}>
-              {m.position !== undefined && (
-                <span class="num">{m.position}</span>
-              )}
-              {seriesTitle(m.kind, m.id)}
-            </a>
+            <SeriesMark
+              href={seriesUrl(m.kind, m.id)}
+              title={seriesTitle(edition, m.kind, m.id)}
+              position={m.position}
+            />
           ))}
         </p>
       )}
@@ -291,7 +285,7 @@ const youtubeUrl = `https://www.youtube.com/watch?v=${meta.youtube.id}`;
       <dl>
         {neighbours.map((n) => (
           <>
-            <dt>{seriesTitle(n.kind, n.id)}</dt>
+            <dt>{seriesTitle(edition, n.kind, n.id)}</dt>
             <dd>
               {[n.prev, n.next]
                 .filter((x) => x !== undefined)
@@ -403,40 +397,6 @@ const youtubeUrl = `https://www.youtube.com/watch?v=${meta.youtube.id}`;
     flex-wrap: wrap;
     gap: var(--s-2);
   }
-  .mark {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55em;
-    font-size: 0.86rem;
-    color: var(--muted);
-    text-decoration: none;
-    padding: 0.28em 0.75em 0.28em 0.28em;
-    border: 1px solid var(--line);
-    border-radius: var(--r-sm);
-    transition:
-      color var(--t),
-      border-color var(--t);
-  }
-  .mark:hover {
-    color: var(--ink);
-    border-color: var(--faint);
-  }
-  .mark .num {
-    display: grid;
-    place-items: center;
-    min-width: 1.5em;
-    height: 1.5em;
-    border: 1px solid var(--line);
-    border-radius: var(--r-xs);
-    font-size: 0.92em;
-    font-feature-settings: "tnum" 1;
-    color: var(--ink);
-    transition: border-color var(--t);
-  }
-  .mark:hover .num {
-    border-color: var(--faint);
-  }
-
   /* Copy control */
   .copygroup {
     position: relative;

@@ -18,6 +18,7 @@
     "import:youtube": "tsx scripts/import-youtube.ts"
   },
   "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.5",
     "@fontsource/literata": "^5.3.0",
     "astro": "^7.4.4"
   },

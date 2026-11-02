@@ -5,6 +5,7 @@ import { getCollection } from "astro:content";
 import type { Author, Collection, Tag, WorkMeta } from "./schema.ts";
 import { parseBody, segments, type ParsedBody } from "./parse.ts";
 import { derive, type Derived } from "./derive.ts";
+import { AUTHOR_ORDER } from "../site.config.ts";
 import type { Citable } from "./cite.ts";
 
 export type Work = ParsedBody & {
@@ -43,7 +44,13 @@ export function loadEdition(): Promise<Edition> {
 }
 
 async function build(): Promise<Edition> {
-  const authors = (await getCollection("authors")).map((e) => e.data);
+  const rank = (id: string) => {
+    const i = AUTHOR_ORDER.indexOf(id);
+    return i === -1 ? AUTHOR_ORDER.length : i;
+  };
+  const authors = (await getCollection("authors"))
+    .map((e) => e.data)
+    .sort((a, b) => rank(a.id) - rank(b.id) || a.id.localeCompare(b.id));
   const collections = (await getCollection("collections")).map((e) => e.data);
   const tags = (await getCollection("tags")).map((e) => e.data);
   const entries = await getCollection("works");

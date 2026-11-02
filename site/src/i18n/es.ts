@@ -48,6 +48,19 @@ export const es = {
     toastQuote: "Cita copiada", // [mockup]
     toastFailed: "No se pudo copiar", // [PROPOSED]
   },
+  pages: {
+    works: "Obras", // [PROPOSED]
+    collections: "Colecciones", // [PROPOSED] (URL /colecciones is [spec])
+    tags: "Etiquetas", // [PROPOSED] (URL /etiquetas is [spec])
+    chronology: "Cronología", // [PROPOSED] (URL /cronologia is [spec])
+    support: "Apoyar al autor", // [PROPOSED]
+    composed: (when: string) => `compuesta en ${when}`, // [PROPOSED]
+    workCount: (n: number) => (n === 1 ? "1 obra" : `${n} obras`), // [PROPOSED]
+    noWorks: "Todavía no hay obras publicadas en esta edición.", // [PROPOSED]
+    noCollections: "Todavía no hay colecciones.", // [PROPOSED]
+    noTags: "Todavía no hay etiquetas.", // [PROPOSED]
+    kind: { album: "álbum", ep: "EP", cycle: "ciclo" }, // [PROPOSED]
+  },
   prefs: {
     open: "Preferencias de lectura", // [mockup]
     title: "preferencias de lectura", // [mockup]

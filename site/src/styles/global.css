@@ -107,3 +107,27 @@ svg {
     animation: none !important;
   }
 }
+
+/* Page sections and editor prose shared by index pages. */
+.section {
+  margin: 0 0 var(--s-12);
+}
+.section > h2 {
+  font-size: var(--fs-ui-lg);
+  font-weight: 500;
+  margin: 0 0 var(--s-4);
+  font-variant: small-caps;
+  letter-spacing: var(--tracking-caps);
+  color: var(--muted);
+}
+.prose {
+  color: var(--ink);
+  max-width: var(--measure);
+}
+.prose p {
+  margin: 0 0 var(--s-4);
+}
+.empty {
+  color: var(--muted);
+  font-style: italic;
+}
