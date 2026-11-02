@@ -2,6 +2,7 @@
 import { Font } from "astro:assets";
 import SiteHeader from "../components/SiteHeader.astro";
 import { es } from "../i18n/es.ts";
+import { SITE_NAME } from "../site.config.ts";
 import "../styles/global.css";
 
 interface Props {
@@ -23,6 +24,19 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={SITE_NAME}
+      href="/rss.xml"
+    />
     <script is:inline>
       // Reader preferences before first paint (no theme flash).
       try {

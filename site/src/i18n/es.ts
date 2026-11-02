@@ -48,6 +48,10 @@ export const es = {
     toastQuote: "Cita copiada", // [mockup]
     toastFailed: "No se pudo copiar", // [PROPOSED]
   },
+  rss: {
+    description:
+      "Obras revisadas de la edición, de la más reciente a la más antigua.", // [PROPOSED]
+  },
   pack: {
     files: "Archivos", // [PROPOSED]
     works: "Obras", // [PROPOSED]

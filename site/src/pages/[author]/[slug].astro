@@ -10,7 +10,8 @@ import { loadEdition, plain, type Work } from "../../lib/edition.ts";
 import { segments } from "../../lib/parse.ts";
 import { hasFraming } from "../../lib/packs.ts";
 import { seriesTitle, seriesUrl } from "../../lib/series.ts";
-import { SITE_NAME } from "../../site.config.ts";
+import { jsonLdScript, workJsonLd } from "../../lib/jsonld.ts";
+import { SITE_NAME, SITE_URL } from "../../site.config.ts";
 
 export async function getStaticPaths() {
   const { works } = await loadEdition();
@@ -79,6 +80,27 @@ const description = work.stanzas
   .map((l) => plain(l.text))
   .join(" / ");
 const youtubeUrl = `https://www.youtube.com/watch?v=${meta.youtube.id}`;
+
+const ld = jsonLdScript(
+  workJsonLd({
+    url: new URL(work.url, SITE_URL).href,
+    title: meta.title,
+    author: { name: author.name, url: new URL(`/${author.id}`, SITE_URL).href },
+    published: meta.youtube.published,
+    youtubeId: meta.youtube.id,
+    text: work.stanzas
+      .map((s) =>
+        s.lines
+          .map((l) => (l.kind === "verse" ? plain(l.text) : `[${l.name}]`))
+          .join("\n"),
+      )
+      .join("\n\n"),
+    collections: (meta.collections ?? []).map((c) => ({
+      name: seriesTitle(edition, "collections", c.id),
+      url: new URL(seriesUrl("collections", c.id), SITE_URL).href,
+    })),
+  }),
+);
 ---
 
 <Base
@@ -86,6 +108,7 @@ const youtubeUrl = `https://www.youtube.com/watch?v=${meta.youtube.id}`;
   description={description || undefined}
   noindex={!work.public}
 >
+  <script slot="head" type="application/ld+json" set:html={ld} />
   <div class="titlebar indented">
     <div>
       <h1>
