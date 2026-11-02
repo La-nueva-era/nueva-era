@@ -22,6 +22,13 @@ const path = Astro.url.pathname;
         {a.name}
       </a>
     ))}
+    <!-- Target of «Índices» is not in the spec. PROPOSED: the title index. -->
+    <a
+      href="/indice/titulos"
+      aria-current={path.startsWith("/indice/") ? "page" : undefined}
+    >
+      {es.nav.indices}
+    </a>
   </nav>
 </header>
 
@@ -62,8 +69,15 @@ const path = Astro.url.pathname;
     color: var(--ink);
   }
   @media (max-width: 640px) {
+    header.site {
+      flex-wrap: wrap;
+      gap: var(--s-2) var(--s-3);
+      padding-left: 0;
+    }
     nav {
       margin-left: 0;
+      gap: var(--s-3);
+      font-size: var(--fs-sm);
     }
   }
 </style>

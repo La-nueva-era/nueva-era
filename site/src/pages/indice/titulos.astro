@@ -1,0 +1,12 @@
+---
+import AlphaIndex from "../../components/AlphaIndex.astro";
+import { es } from "../../i18n/es.ts";
+import { loadEdition } from "../../lib/edition.ts";
+
+const { works } = await loadEdition();
+const entries = works
+  .filter((w) => w.public)
+  .map((w) => ({ text: w.meta.title, href: w.url, sub: w.author.name }));
+---
+
+<AlphaIndex title={es.indices.titles} entries={entries} />

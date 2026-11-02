@@ -48,6 +48,10 @@ export const es = {
     toastQuote: "Cita copiada", // [mockup]
     toastFailed: "No se pudo copiar", // [PROPOSED]
   },
+  indices: {
+    titles: "Índice de títulos", // [PROPOSED] (URL /indice/titulos is [spec])
+    firstVerses: "Índice de primeros versos", // [PROPOSED] (URL /indice/primeros-versos is [spec])
+  },
   search: {
     label: "Buscar", // [mockup]
     placeholder: "Buscar en la obra…  ( / )", // [mockup]
