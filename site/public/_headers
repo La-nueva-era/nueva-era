@@ -1,0 +1,12 @@
+# Cloudflare Pages headers. Pack files are for models and for people who fetch
+# them deliberately: never indexed by search engines (SPEC §9.2).
+/pack/*
+  X-Robots-Tag: noindex
+/llms.txt
+  X-Robots-Tag: noindex
+/llms-full.txt
+  X-Robots-Tag: noindex
+/solitario/*.md
+  X-Robots-Tag: noindex
+/ozelot/*.md
+  X-Robots-Tag: noindex

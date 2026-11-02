@@ -48,6 +48,14 @@ export const es = {
     toastQuote: "Cita copiada", // [mockup]
     toastFailed: "No se pudo copiar", // [PROPOSED]
   },
+  pack: {
+    files: "Archivos", // [PROPOSED]
+    works: "Obras", // [PROPOSED]
+    full: "Edición completa", // [PROPOSED]
+    author: (name: string) => `Obra completa de ${name}`, // [PROPOSED]
+    collection: (title: string) => `Colección: ${title}`, // [PROPOSED]
+    tag: (title: string) => `Etiqueta: ${title}`, // [PROPOSED]
+  },
   indices: {
     titles: "Índice de títulos", // [PROPOSED] (URL /indice/titulos is [spec])
     firstVerses: "Índice de primeros versos", // [PROPOSED] (URL /indice/primeros-versos is [spec])
