@@ -335,6 +335,34 @@ describe("lintContent — cross-references", () => {
     expect(rules(missing)).toEqual(["error:collection-positions"]);
   });
 
+  it("fails on gaps in an ordered tag, like an ordered collection", () => {
+    const tag = "id: serie\ntitle: SERIE\nauthor: solitario\nordered: true\n";
+    const inTag = (n: number) => ({
+      tags: `tags:\n  - id: serie\n    position: ${n}`,
+    });
+    const ok = lint({
+      "tags/serie.yaml": tag,
+      "solitario/uno.md": work("uno\n", { ...inTag(1), ...yt("AAAAAAAAAAA") }),
+      "solitario/dos.md": work("dos\n", { ...inTag(2), ...yt("BBBBBBBBBBB") }),
+    });
+    expect(ok).toEqual([]);
+    const gap = lint({
+      "tags/serie.yaml": tag,
+      "solitario/uno.md": work("uno\n", { ...inTag(1), ...yt("AAAAAAAAAAA") }),
+      "solitario/dos.md": work("dos\n", { ...inTag(4), ...yt("BBBBBBBBBBB") }),
+    });
+    expect(rules(gap)).toEqual(["error:tag-positions"]);
+  });
+
+  it("does not check positions in an unordered tag", () => {
+    const tag = "id: arte\ntitle: Arte\nauthor: solitario\nordered: false\n";
+    const issues = lint({
+      "tags/arte.yaml": tag,
+      "solitario/uno.md": work("uno\n", { tags: "tags:\n  - id: arte" }),
+    });
+    expect(issues).toEqual([]);
+  });
+
   it("fails on a note anchored past the last verse", () => {
     const notes = "notes:\n  - verse: 3\n    text: nota.";
     expect(

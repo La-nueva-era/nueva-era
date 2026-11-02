@@ -45,7 +45,7 @@ export function lintContent(files: Record<string, string>): Issue[] {
   const ids = {
     authors: new Set<string>(),
     collections: new Map<string, boolean>(),
-    tags: new Set<string>(),
+    tags: new Map<string, boolean>(),
   };
   const owners: { path: string; author: string }[] = [];
   const works: Work[] = [];
@@ -81,7 +81,7 @@ export function lintContent(files: Record<string, string>): Issue[] {
     if (dir === "authors") ids.authors.add(value.id);
     if (dir === "collections")
       ids.collections.set(value.id, value.ordered ?? false);
-    if (dir === "tags") ids.tags.add(value.id);
+    if (dir === "tags") ids.tags.set(value.id, value.ordered ?? false);
     if (value.author !== undefined) owners.push({ path, author: value.author });
   }
   for (const { path, author } of owners) {
@@ -129,16 +129,19 @@ export function lintContent(files: Record<string, string>): Issue[] {
         report(w.path, "unknown-related", `unknown related work «${r}»`);
     }
   }
-  for (const [id, ordered] of ids.collections) {
-    if (!ordered) continue;
-    const members = works.flatMap((w) =>
-      (w.meta.collections ?? [])
-        .filter((c) => c.id === id)
-        .map((c) => ({ id: w.id, position: c.position })),
-    );
-    const problem = positionProblem(members);
-    if (problem)
-      report(`collections/${id}.yaml`, "collection-positions", problem);
+  // Ordered collections and ordered tags (tags behave like EPs) share the rule.
+  for (const kind of ["collections", "tags"] as const) {
+    const noun = kind === "tags" ? "tag" : "collection";
+    for (const [id, ordered] of ids[kind]) {
+      if (!ordered) continue;
+      const members = works.flatMap((w) =>
+        (w.meta[kind] ?? [])
+          .filter((c) => c.id === id)
+          .map((c) => ({ id: w.id, position: c.position })),
+      );
+      const problem = positionProblem(members, noun);
+      if (problem) report(`${kind}/${id}.yaml`, `${noun}-positions`, problem);
+    }
   }
 
   return issues;
@@ -152,7 +155,7 @@ function lintWork(
   ids: {
     authors: Set<string>;
     collections: Map<string, boolean>;
-    tags: Set<string>;
+    tags: Map<string, boolean>;
   },
   issues: Issue[],
 ): Work | undefined {
@@ -404,12 +407,13 @@ function titleCaseProblem(title: string): string | undefined {
 
 function positionProblem(
   members: { id: string; position: number | undefined }[],
+  noun: "collection" | "tag",
 ): string | undefined {
   const missing = members
     .filter((m) => m.position === undefined)
     .map((m) => m.id);
   if (missing.length > 0)
-    return `ordered collection members without position: ${missing.join(", ")}`;
+    return `ordered ${noun} members without position: ${missing.join(", ")}`;
   const positions = members
     .map((m) => m.position as number)
     .sort((a, b) => a - b);
