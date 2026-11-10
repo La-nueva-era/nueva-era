@@ -4,6 +4,7 @@ import { workSchema } from "../../site/src/lib/schema.ts";
 import {
   existingVideoIds,
   slugify,
+  cleanTitle,
   stubFor,
   type Video,
 } from "./youtube-import.ts";
@@ -14,6 +15,32 @@ const video: Video = {
   upload_date: "20210914",
   description: "Cuando el valor del dinero\nsupera todo valor.",
 };
+
+const SOLITARIO = { id: "solitario", name: "Solitario" };
+
+describe("cleanTitle", () => {
+  it("strips the author prefix and bracketed tags", () => {
+    expect(cleanTitle("Solitario - Os lo dije [LETRA]", "Solitario")).toBe(
+      "Os lo dije",
+    );
+    expect(
+      cleanTitle(
+        "Solitario - El más profundo de los solipsismos [ Letra ]",
+        "Solitario",
+      ),
+    ).toBe("El más profundo de los solipsismos");
+    expect(cleanTitle("solitario – Nueva era", "Solitario")).toBe("Nueva era");
+  });
+
+  it("keeps everything else, including parentheses", () => {
+    expect(
+      cleanTitle("Solitario - Volar (Prod. TERROR BEATS)", "Solitario"),
+    ).toBe("Volar (Prod. TERROR BEATS)");
+    expect(cleanTitle("Otro autor - Tema", "Solitario")).toBe(
+      "Otro autor - Tema",
+    );
+  });
+});
 
 describe("slugify", () => {
   it("makes kebab-case ASCII from a Spanish title", () => {
@@ -27,8 +54,19 @@ describe("slugify", () => {
 });
 
 describe("stubFor", () => {
+  it("uses the cleaned title for the title and the slug", () => {
+    const stub = stubFor(
+      { ...video, title: "Solitario - Os lo dije [LETRA]" },
+      SOLITARIO,
+    );
+    expect(stub.path).toBe("solitario/os-lo-dije.md");
+    expect(parseYaml(stub.text.split(/^---\n/m)[1] ?? "").title).toBe(
+      "Os lo dije",
+    );
+  });
+
   it("builds a hidden draft with the description as a source and an empty body", () => {
-    const stub = stubFor(video, "solitario");
+    const stub = stubFor(video, SOLITARIO);
     expect(stub.path).toBe("solitario/marketing-y-cobardia.md");
     const [, front, body] = stub.text.split(/^---\n/m);
     expect(body).toBe("");
@@ -51,7 +89,7 @@ describe("stubFor", () => {
   });
 
   it("omits the source when the description is empty", () => {
-    const stub = stubFor({ ...video, description: "" }, "solitario");
+    const stub = stubFor({ ...video, description: "" }, SOLITARIO);
     expect(parseYaml(stub.text.split(/^---\n/m)[1] ?? "")).not.toHaveProperty(
       "sources",
     );

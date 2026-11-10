@@ -21,18 +21,35 @@ export function slugify(title: string): string {
 }
 
 /**
+ * The work's title inside a video title: without the "Author - " prefix and
+ * without bracketed tags such as "[LETRA]". Everything else is kept.
+ */
+export function cleanTitle(title: string, authorName: string): string {
+  const prefix = new RegExp(
+    `^\\s*${authorName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[-–—]\\s*`,
+    "i",
+  );
+  return title
+    .replace(prefix, "")
+    .replace(/\s*\[[^\]]*\]\s*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
  * A draft stub for a video: hidden, empty body, description kept verbatim as a
- * source. The title is the video title as published; the editor fixes it.
+ * source. The title is the cleaned video title; the editor reviews it.
  */
 export function stubFor(
   video: Video,
-  author: string,
+  author: { id: string; name: string },
 ): { path: string; text: string } {
+  const title = cleanTitle(video.title, author.name);
   const d = video.upload_date;
   const published = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
   const meta: Record<string, unknown> = {
-    title: video.title,
-    author,
+    title,
+    author: author.id,
     youtube: { id: video.id, published },
     status: "draft",
     visibility: "hidden",
@@ -44,7 +61,7 @@ export function stubFor(
   }
   const front = stringify(meta, { lineWidth: 0, blockQuote: "literal" });
   return {
-    path: `${author}/${slugify(video.title)}.md`,
+    path: `${author.id}/${slugify(title)}.md`,
     text: `---\n${front}---\n`,
   };
 }

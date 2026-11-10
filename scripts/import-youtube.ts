@@ -33,35 +33,32 @@ function ytdlp(args: string[]): string {
   );
 }
 
-function sources(): { author: string; urls: string[] }[] {
-  const [author, ...urls] = process.argv.slice(2);
-  if (author) {
-    if (urls.length === 0) {
-      const meta = parseYaml(
-        readFileSync(join(CONTENT, "authors", `${author}.yaml`), "utf8"),
+type AuthorFile = { id: string; name: string; links?: { youtube?: string } };
+
+function readAuthor(id: string): AuthorFile {
+  return parseYaml(
+    readFileSync(join(CONTENT, "authors", `${id}.yaml`), "utf8"),
+  ) as AuthorFile;
+}
+
+function sources(): { author: AuthorFile; urls: string[] }[] {
+  const [id, ...urls] = process.argv.slice(2);
+  if (id) {
+    const author = readAuthor(id);
+    if (urls.length > 0) return [{ author, urls }];
+    if (!author.links?.youtube) {
+      throw new Error(
+        `content/authors/${id}.yaml has no links.youtube; pass a URL`,
       );
-      const url = (meta as { links?: { youtube?: string } }).links?.youtube;
-      if (!url)
-        throw new Error(
-          `content/authors/${author}.yaml has no links.youtube; pass a URL`,
-        );
-      return [{ author, urls: [url] }];
     }
-    return [{ author, urls }];
+    return [{ author, urls: [author.links.youtube] }];
   }
   return readdirSync(join(CONTENT, "authors"))
     .filter((f) => f.endsWith(".yaml") && !f.startsWith("_"))
-    .flatMap((f) => {
-      const meta = parseYaml(
-        readFileSync(join(CONTENT, "authors", f), "utf8"),
-      ) as {
-        id: string;
-        links?: { youtube?: string };
-      };
-      return meta.links?.youtube
-        ? [{ author: meta.id, urls: [meta.links.youtube] }]
-        : [];
-    });
+    .map((f) => readAuthor(f.replace(/\.yaml$/, "")))
+    .flatMap((author) =>
+      author.links?.youtube ? [{ author, urls: [author.links.youtube] }] : [],
+    );
 }
 
 const works: Record<string, string> = {};
@@ -90,7 +87,7 @@ for (const { author, urls } of sources()) {
       .filter(Boolean);
     const fresh = listed.filter((id) => !known.has(id));
     console.log(
-      `${author} · ${url}: ${listed.length} videos, ${fresh.length} new`,
+      `${author.id} · ${url}: ${listed.length} videos, ${fresh.length} new`,
     );
     for (const id of fresh) {
       let json = "";
