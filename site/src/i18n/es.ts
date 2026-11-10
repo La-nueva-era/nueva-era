@@ -6,19 +6,19 @@
 
 export const es = {
   site: {
-    name: "La nueva era", // [spec]
-    skip: "Saltar al contenido", // [PROPOSED]
+    name: "La nueva era",
+    skip: "Saltar al contenido",
   },
   nav: {
-    label: "Secciones", // [mockup]
-    indices: "Índices", // [spec]
+    label: "Secciones",
+    indices: "Índices",
   },
   work: {
-    draft: "borrador", // [spec]
-    copy: "Copiar", // [spec]
-    copyTitle: "Copiar el texto del poema", // [mockup]
-    copyMore: "Más opciones de copia", // [mockup]
-    copyPageLink: "Copiar link de la página", // [spec]
+    draft: "borrador",
+    copy: "Copiar",
+    copyTitle: "Copiar poema completo",
+    copyMore: "Más opciones de copia",
+    copyPageLink: "Copiar el link de esta página",
     plainText: "Texto plano (.md)", // [spec]
     watchOnYouTube: "Ver en YouTube", // [spec]
     play: (title: string) => `Reproducir «${title}» en YouTube`, // [mockup]
@@ -96,7 +96,7 @@ export const es = {
   },
   prefs: {
     open: "Preferencias de lectura", // [mockup]
-    title: "preferencias de lectura", // [mockup]
+    title: "Preferencias de lectura", // [mockup]
     nums: "Números de verso", // [mockup]
     numsAll: "Todos", // [mockup]
     numsEvery5: "Cada cinco", // [mockup]

@@ -417,8 +417,7 @@ const ld = jsonLdScript(
     border-radius: var(--r-sm);
     font-size: var(--fs-sm);
     font-weight: 400;
-    font-variant: small-caps;
-    letter-spacing: var(--tracking-caps);
+    font-style: italic;
     color: var(--muted);
   }
   .byline {
@@ -542,8 +541,7 @@ const ld = jsonLdScript(
     transition: background var(--t);
   }
   .label {
-    font-variant: small-caps;
-    letter-spacing: 0.06em;
+    font-style: italic;
     color: var(--muted);
   }
   .vn {
@@ -556,7 +554,6 @@ const ld = jsonLdScript(
     font-size: 0.85em;
     line-height: calc(var(--fs) * var(--lh) / 0.85);
     color: var(--faint);
-    opacity: 0.55;
     font-feature-settings:
       "tnum" 1,
       "onum" 1;
@@ -574,11 +571,10 @@ const ld = jsonLdScript(
   .verse:target .vn,
   .verse:global(.hl) .vn,
   .vn:focus-visible {
-    opacity: 0.9;
+    color: var(--muted);
   }
   .vn:hover {
     color: var(--ink);
-    opacity: 1;
   }
   .verse:target,
   .verse:global(.hl) {
@@ -673,12 +669,9 @@ const ld = jsonLdScript(
     margin: var(--s-16) 0 0;
   }
   .block > h2 {
-    font-size: var(--fs-ui-lg);
-    font-weight: 500;
+    font-size: var(--fs-h2);
+    font-weight: 600;
     margin: 0 0 1.1rem;
-    font-variant: small-caps;
-    letter-spacing: var(--tracking-caps);
-    color: var(--muted);
   }
   .notes ol {
     margin: 0;

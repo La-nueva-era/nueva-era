@@ -8,7 +8,7 @@
   --raise-2: #242019;
   --ink: #e9e2d3;
   --muted: #a09786;
-  --faint: #655d51;
+  --faint: #8a8172; /* lowest text level; AA on --bg and --raise */
   --line: #2c2823;
   --focus: #f2ecdd;
   --hl: rgb(235 230 218 / 0.09);
@@ -27,7 +27,7 @@
   --fs-body-sm: 0.94rem;
   --fs-lead: 1.02rem;
   --fs-h1: clamp(1.85rem, 5vw, 2.3rem);
-  --tracking-caps: 0.1em;
+  --fs-h2: 1.2rem;
 
   /* Layout. */
   --measure: 64ch;
@@ -67,8 +67,8 @@
   --raise: #eee9dd;
   --raise-2: #e5dfd0;
   --ink: #26221b;
-  --muted: #6e6759;
-  --faint: #a89e8d;
+  --muted: #57514a;
+  --faint: #6f685a;
   --line: #ded7c7;
   --focus: #26221b;
   --hl: rgb(38 34 27 / 0.08);
@@ -81,8 +81,8 @@
     --raise: #eee9dd;
     --raise-2: #e5dfd0;
     --ink: #26221b;
-    --muted: #6e6759;
-    --faint: #a89e8d;
+    --muted: #57514a;
+    --faint: #6f685a;
     --line: #ded7c7;
     --focus: #26221b;
     --hl: rgb(38 34 27 / 0.08);
