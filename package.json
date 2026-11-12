@@ -12,6 +12,7 @@
     "preview": "astro preview --root site",
     "lint": "eslint . && prettier --check . --ignore-path .gitignore --ignore-path .prettierignore --ignore-path \"$(git rev-parse --git-path info/exclude)\"",
     "format": "prettier --write . --ignore-path .gitignore --ignore-path .prettierignore --ignore-path \"$(git rev-parse --git-path info/exclude)\"",
+    "lint:content": "tsx scripts/lint-content.ts",
     "typecheck": "astro check --root site && tsc --noEmit -p tsconfig.json",
     "test": "vitest run"
   },
@@ -26,11 +27,14 @@
     "eslint": "^10.14.0",
     "eslint-plugin-astro": "^3.2.1",
     "globals": "^17.14.0",
+    "lefthook": "^2.2.2",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
     "vitest": "^5.0.5",
+    "yaml": "^2.9.1",
     "zod": "^4.6.7"
   }
 }
