@@ -1,0 +1,140 @@
+---
+// Global header: wordmark, section links and the theme switch. Sticky; it
+// turns to glass once the page scrolls under it.
+// On narrow screens the links move to a row of their own under the bar,
+// which scrolls away with the page.
+import ThemeToggle from "./ThemeToggle.astro";
+import { es } from "../i18n/es.ts";
+import { loadEdition } from "../lib/edition.ts";
+
+const { authors } = await loadEdition();
+const path = Astro.url.pathname;
+const links = [
+  ...authors.map((a) => ({
+    href: `/${a.id}`,
+    label: a.name,
+    current: path === `/${a.id}`,
+  })),
+  {
+    href: "/indice/titulos",
+    label: es.nav.indices,
+    current: path.startsWith("/indice/"),
+  },
+];
+---
+
+<div class="bar" data-bar>
+  <header class="site">
+    <a class="wordmark" href="/">
+      {es.site.name}
+    </a>
+    <nav class="links wide" aria-label={es.nav.label}>
+      {links.map((l) => (
+        <a href={l.href} aria-current={l.current ? "page" : undefined}>
+          {l.label}
+        </a>
+      ))}
+    </nav>
+    <ThemeToggle />
+  </header>
+</div>
+<nav class="links narrow" aria-label={es.nav.label}>
+  {links.map((l) => (
+    <a href={l.href} aria-current={l.current ? "page" : undefined}>
+      {l.label}
+    </a>
+  ))}
+</nav>
+
+<script>
+  const bar = document.querySelector<HTMLElement>("[data-bar]");
+  if (bar) {
+    const update = () => bar.classList.toggle("scrolled", scrollY > 8);
+    addEventListener("scroll", update, { passive: true });
+    update();
+  }
+</script>
+
+<style>
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--t);
+  }
+  /* The glass lives on a layer of its own: a backdrop filter on the bar
+     itself would trap the fixed search panel inside it. */
+  .bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    background: var(--glass);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    transition: opacity var(--t);
+  }
+  .bar.scrolled::before {
+    opacity: 1;
+  }
+  .bar.scrolled {
+    border-bottom-color: var(--line);
+  }
+  header.site {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    max-width: var(--page-max-wide);
+    margin: 0 auto;
+    padding: var(--s-3) var(--page-pad-wide);
+  }
+  .wordmark {
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .wordmark:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+  .links {
+    display: flex;
+    gap: var(--s-5);
+    margin-left: auto;
+    font-size: var(--fs-nav);
+    white-space: nowrap;
+  }
+  .links a {
+    text-decoration: none;
+    color: var(--ink);
+    opacity: 0.86;
+    transition: opacity var(--t);
+  }
+  .links a:hover,
+  .links a[aria-current="page"] {
+    opacity: 1;
+    text-decoration: underline;
+    text-decoration-color: var(--muted);
+    text-underline-offset: 0.3em;
+  }
+  .links.narrow {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    header.site {
+      padding: var(--s-2) var(--page-pad);
+    }
+    .links.wide {
+      display: none;
+    }
+    .links.narrow {
+      display: flex;
+      gap: var(--s-4);
+      margin: 0;
+      padding: var(--s-1) var(--page-pad) var(--s-2);
+    }
+  }
+</style>

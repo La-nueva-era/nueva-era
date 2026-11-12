@@ -1,0 +1,83 @@
+---
+// Light/dark switch. Without a stored choice the system preference
+// applies; the icon always shows the theme the button switches to.
+import { Moon, Sun } from "@lucide/astro";
+import Icon from "./Icon.astro";
+import { es } from "../i18n/es.ts";
+---
+
+<button
+  class="theme"
+  type="button"
+  data-theme-toggle
+  aria-label={es.prefs.toLight}
+>
+  <Icon icon={Sun} class="to-light" />
+  <Icon icon={Moon} class="to-dark" />
+</button>
+
+<script>
+  import { es } from "../i18n/es.ts";
+
+  const root = document.documentElement;
+  const button = document.querySelector<HTMLButtonElement>(
+    "[data-theme-toggle]",
+  );
+  const isLight = () =>
+    root.dataset.theme
+      ? root.dataset.theme === "light"
+      : matchMedia("(prefers-color-scheme: light)").matches;
+  const label = () =>
+    button?.setAttribute(
+      "aria-label",
+      isLight() ? es.prefs.toDark : es.prefs.toLight,
+    );
+
+  label();
+  button?.addEventListener("click", () => {
+    const next = isLight() ? "dark" : "light";
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem("lne-theme", next);
+    } catch {
+      // Storage unavailable: the choice lasts for this page only.
+    }
+    label();
+  });
+</script>
+
+<style>
+  .theme {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    color: var(--ink);
+    opacity: 0.86;
+    transition:
+      opacity var(--t),
+      background var(--t);
+  }
+  .theme:hover {
+    opacity: 1;
+    background: var(--raise);
+  }
+  .theme :global(.to-dark) {
+    display: none;
+  }
+  :global(:root[data-theme="light"]) .theme :global(.to-light) {
+    display: none;
+  }
+  :global(:root[data-theme="light"]) .theme :global(.to-dark) {
+    display: block;
+  }
+  @media (prefers-color-scheme: light) {
+    :global(:root:not([data-theme])) .theme :global(.to-light) {
+      display: none;
+    }
+    :global(:root:not([data-theme])) .theme :global(.to-dark) {
+      display: block;
+    }
+  }
+</style>

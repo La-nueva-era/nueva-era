@@ -1,0 +1,19 @@
+---
+// One stroke weight and size for every icon on the site (Lucide, ISC).
+// Icons are decorative: the control that holds one carries the label.
+import type { AstroComponent } from "@lucide/astro";
+
+interface Props {
+  icon: AstroComponent;
+  size?: number;
+  class?: string;
+}
+const { icon: Glyph, size = 18, class: className } = Astro.props;
+---
+
+<Glyph
+  size={size}
+  stroke-width={1.6}
+  aria-hidden="true"
+  {...(className ? { class: className } : {})}
+/>
