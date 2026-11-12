@@ -18,6 +18,41 @@ export const es = {
     label: "Secciones",
     indices: "Índices",
   },
+  work: {
+    draft: "borrador",
+    copy: "Copiar",
+    copyTitle: "Copiar poema completo",
+    copyMore: "Más opciones de copia",
+    copyPageLink: "Copiar el link de esta página",
+    plainText: "Texto plano (.md)",
+    watchOnYouTube: "Ver en YouTube",
+    play: (title: string) => `Reproducir «${title}» en YouTube`,
+    verseLink: (n: number) => `Enlace al v. ${n}`,
+    uncertain: "Lectura dudosa",
+    uncertainWithNote: "Lectura dudosa; véase la nota",
+    noteOpen: (n: number) => `Ver nota al verso ${n}`,
+    noteClose: "Cerrar nota",
+    notes: "Notas del archivo",
+    noVerse: "—",
+    extra: "Información adicional",
+    description: "descripción del vídeo",
+    communityPost: "publicación de la comunidad",
+    patreon: "Patreon, para suscriptores — apoya al autor para leerlo",
+    external: "enlace externo",
+    around: "En torno a esta obra",
+    related: "El editor relaciona",
+    relatedFrom: "Relacionada desde",
+    mentionedIn: "Mencionada en",
+    mentions: "Menciona",
+    selQuoteLink: "Copiar link de la cita",
+    selQuoteText: "Copiar cita con versos",
+    clearHighlight: (range: string) => `Quitar resaltado (${range})`,
+    toastPoem: "Poema copiado",
+    toastLink: "Link copiado",
+    toastQuoteLink: "Link de la cita copiado",
+    toastQuote: "Cita copiada",
+    toastFailed: "No se pudo copiar",
+  },
   rss: {
     description: "Obras ordenadas de la más reciente a la más antigua.",
   },
@@ -40,3 +75,10 @@ export const es = {
     toDark: "Cambiar a tema oscuro",
   },
 } as const;
+
+export function formatDate(iso: string): string {
+  return new Intl.DateTimeFormat("es", {
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${iso}T00:00:00Z`));
+}
