@@ -3,6 +3,7 @@
 import { ChevronDown, Copy, FileText, Link, Play } from "@lucide/astro";
 import Base from "../../layouts/Base.astro";
 import Icon from "../../components/Icon.astro";
+import ReaderPrefs from "../../components/ReaderPrefs.astro";
 import SeriesMark from "../../components/SeriesMark.astro";
 import VideoFacade from "../../components/VideoFacade.astro";
 import { es, formatDate } from "../../i18n/es.ts";
@@ -342,6 +343,7 @@ const ld = jsonLdScript(
   )}
 
   <Fragment slot="after">
+    <ReaderPrefs />
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     {/* Icons for the selection menu, which work.ts builds on the client. */}
     <template id="icon-link">
