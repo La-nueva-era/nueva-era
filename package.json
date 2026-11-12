@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@fontsource/literata": "^5.3.0",
+    "@lucide/astro": "^1.70.0",
     "astro": "^7.4.4"
   },
   "devDependencies": {

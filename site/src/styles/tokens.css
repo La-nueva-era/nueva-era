@@ -1,0 +1,133 @@
+/* Design tokens. Components use these, never raw values. */
+
+:root {
+  /* Colour — dark theme is the default. */
+  --bg: #131110;
+  --raise: #1c1916;
+  --raise-2: #242019;
+  --ink: #e9e2d3;
+  --muted: #a09786;
+  --faint: #8a8172; /* lowest text level; AA on --bg and --raise */
+  --voice-a: #d9ad72; /* dialog voices; AA on --bg */
+  --voice-b: #93b9b3;
+  --voice-c: #c9a0b6;
+  --line: #2c2823;
+  --focus: #f2ecdd;
+  --hl: rgb(235 230 218 / 0.1);
+  --hl-strong: rgb(235 230 218 / 0.24);
+  --shadow: 0 12px 32px rgb(0 0 0 / 0.5), 0 2px 8px rgb(0 0 0 / 0.35);
+  --on-video: rgb(255 255 255 / 0.9);
+  --video-scrim: rgb(0 0 0 / 0.35);
+  --glass: rgb(19 17 16 / 0.72);
+  --cta-line: rgb(233 226 211 / 0.55);
+  --cta-gleam: rgb(255 255 255 / 0.07);
+
+  /* Type — Literata for everything. */
+  --font: var(--font-literata), Georgia, serif;
+  --fs: 1.14rem;
+  --lh: 1.6;
+  --fs-xs: 0.68rem;
+  --fs-sm: 0.78rem;
+  --fs-ui: 0.85rem;
+  --fs-ui-lg: 0.9rem;
+  --fs-nav: 0.95rem;
+  --fs-body-sm: 0.94rem;
+  --fs-lead: 1.02rem;
+  --fs-intro: 1.3rem;
+  --fs-h1: clamp(1.85rem, 5vw, 2.3rem);
+  --fs-h2: 1.2rem;
+
+  /* Layout. */
+  --measure: 64ch;
+  --gutter: 3.4rem; /* margin column for verse numbers */
+  --indent: var(--gutter); /* text blocks align with verse text */
+  --vn-gap: 1.1rem; /* space between a verse number and its verse */
+  --page-pad: 1.25rem;
+  --page-max: calc(var(--measure) + var(--gutter) + 2 * var(--page-pad));
+  --page-max-wide: 75rem;
+  --page-pad-wide: 2.5rem;
+
+  /* Spacing — 4px base scale. */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.25rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-10: 2.5rem;
+  --s-12: 3rem;
+  --s-14: 3.5rem;
+  --s-16: 4rem;
+  --s-24: 6rem;
+
+  /* Shape. */
+  --r: 8px;
+  --r-sm: 4px;
+  --r-xs: 3px;
+  --r-pill: 999px;
+
+  /* Motion — micro-transitions only; disabled by prefers-reduced-motion. */
+  --t-fast: 0.12s;
+  --t: 0.15s;
+  --t-slow: 0.2s;
+}
+
+/* Light theme: chosen explicitly, or by the system when nothing is chosen. */
+:root[data-theme="light"] {
+  --bg: #f5f1e8;
+  --raise: #eee9dd;
+  --raise-2: #e5dfd0;
+  --ink: #26221b;
+  --muted: #57514a;
+  --faint: #6f685a;
+  --voice-a: #8a5716;
+  --voice-b: #2c6a63;
+  --voice-c: #87476a;
+  --line: #ded7c7;
+  --focus: #26221b;
+  --hl: rgb(38 34 27 / 0.07);
+  --hl-strong: rgb(38 34 27 / 0.18);
+  --shadow: 0 12px 32px rgb(60 50 30 / 0.14), 0 2px 8px rgb(60 50 30 / 0.1);
+  --glass: rgb(245 241 232 / 0.76);
+  --cta-line: rgb(38 34 27 / 0.5);
+  --cta-gleam: rgb(255 255 255 / 0.6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f5f1e8;
+    --raise: #eee9dd;
+    --raise-2: #e5dfd0;
+    --ink: #26221b;
+    --muted: #57514a;
+    --faint: #6f685a;
+    --voice-a: #8a5716;
+    --voice-b: #2c6a63;
+    --voice-c: #87476a;
+    --line: #ded7c7;
+    --focus: #26221b;
+    --hl: rgb(38 34 27 / 0.07);
+    --hl-strong: rgb(38 34 27 / 0.18);
+    --shadow: 0 12px 32px rgb(60 50 30 / 0.14), 0 2px 8px rgb(60 50 30 / 0.1);
+    --glass: rgb(245 241 232 / 0.76);
+    --cta-line: rgb(38 34 27 / 0.5);
+    --cta-gleam: rgb(255 255 255 / 0.6);
+  }
+}
+
+/* Below the text column's full width the indent would only push the text
+   right, so text blocks run full width; verse numbers keep their margin. */
+@media (max-width: 48rem) {
+  :root {
+    --indent: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 2.2rem;
+    --page-pad-wide: 1.25rem;
+    --vn-gap: 0.55rem;
+  }
+}

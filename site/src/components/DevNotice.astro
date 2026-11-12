@@ -1,0 +1,72 @@
+---
+// Development notice above the header on every page. Dismissing it hides it
+// for the rest of the browser session; Base hides it before first paint.
+import { X } from "@lucide/astro";
+import Icon from "./Icon.astro";
+import { es } from "../i18n/es.ts";
+---
+
+<div class="notice" role="note" data-dev-notice>
+  <p>{es.notice.text}</p>
+  <button type="button" class="dismiss" aria-label={es.notice.close}>
+    <Icon icon={X} size={16} />
+  </button>
+</div>
+
+<script>
+  const notice = document.querySelector<HTMLElement>("[data-dev-notice]");
+  notice?.querySelector("button")?.addEventListener("click", () => {
+    try {
+      sessionStorage.setItem("lne-notice", "off");
+    } catch {
+      // Storage unavailable: it hides for this page only.
+    }
+    document.documentElement.dataset.notice = "off";
+    // Focus moves on to the next control instead of being lost.
+    document.querySelector<HTMLElement>(".wordmark")?.focus();
+  });
+</script>
+
+<style>
+  .notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-3);
+    padding: var(--s-1) var(--page-pad-wide);
+    background: var(--raise);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-ui);
+    color: var(--muted);
+  }
+  :global(html[data-notice="off"]) .notice {
+    display: none;
+  }
+  p {
+    margin: 0;
+    padding-block: var(--s-1);
+    text-wrap: pretty;
+  }
+  .dismiss {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--r);
+    color: var(--faint);
+    transition:
+      color var(--t),
+      background var(--t);
+  }
+  .dismiss:hover {
+    color: var(--ink);
+    background: var(--raise-2);
+  }
+  @media (max-width: 640px) {
+    .notice {
+      justify-content: space-between;
+      padding-inline: var(--page-pad);
+    }
+  }
+</style>
