@@ -1,0 +1,33 @@
+---
+// Both poets on one timeline, by publication date; composition date when known.
+import Base from "../layouts/Base.astro";
+import PageHead from "../components/PageHead.astro";
+import WorkList from "../components/WorkList.astro";
+import { es } from "../i18n/es.ts";
+import { loadEdition } from "../lib/edition.ts";
+import { SITE_NAME } from "../site.config.ts";
+
+const edition = await loadEdition();
+const works = edition.works.filter((w) => w.public);
+const years = [
+  ...new Set(works.map((w) => w.meta.youtube.published.slice(0, 4))),
+];
+---
+
+<Base title={`${es.pages.chronology} · ${SITE_NAME}`}>
+  <PageHead
+    title={es.pages.chronology}
+    lead={es.pages.workCount(works.length)}
+  />
+  {works.length === 0 && <p class="empty indented">{es.pages.noWorks}</p>}
+  {years.map((y) => (
+    <section class="section indented" aria-labelledby={`y${y}`}>
+      <h2 id={`y${y}`}>{y}</h2>
+      <WorkList
+        works={works.filter((w) => w.meta.youtube.published.startsWith(y))}
+        edition={edition}
+        showAuthor
+      />
+    </section>
+  ))}
+</Base>

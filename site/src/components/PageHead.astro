@@ -1,0 +1,31 @@
+---
+interface Props {
+  title: string;
+  lead?: string | undefined;
+}
+const { title, lead } = Astro.props;
+---
+
+<div class="pagehead indented">
+  <h1>{title}</h1>
+  {lead && <p class="lead">{lead}</p>}
+  <slot />
+</div>
+
+<style>
+  .pagehead {
+    margin: var(--s-14) 0 var(--s-10);
+  }
+  h1 {
+    font-size: var(--fs-h1);
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  .lead {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-lead);
+    color: var(--muted);
+  }
+</style>

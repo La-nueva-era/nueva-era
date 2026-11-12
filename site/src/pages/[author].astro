@@ -1,0 +1,118 @@
+---
+// Author page: bio, support links, works by chronology, collections, tags.
+import Base from "../layouts/Base.astro";
+import PageHead from "../components/PageHead.astro";
+import SeriesMark from "../components/SeriesMark.astro";
+import WorkList from "../components/WorkList.astro";
+import { es } from "../i18n/es.ts";
+import { loadEdition } from "../lib/edition.ts";
+import { markdown } from "../lib/markdown.ts";
+import { seriesUrl } from "../lib/series.ts";
+import { SITE_NAME } from "../site.config.ts";
+
+export async function getStaticPaths() {
+  const { authors } = await loadEdition();
+  return authors.map((a) => ({
+    params: { author: a.id },
+    props: { id: a.id },
+  }));
+}
+
+const { id } = Astro.props as { id: string };
+const edition = await loadEdition();
+const author = edition.authors.find((a) => a.id === id);
+if (!author) throw new Error(`unknown author «${id}»`);
+// Newest first; edition.works is ascending by publication date.
+const works = edition.works
+  .filter((w) => w.public && w.meta.author === id)
+  .reverse();
+const collections = edition.collections.filter((c) => c.author === id);
+const tags = edition.tags.filter((t) => t.author === id);
+const bio = await markdown(author.bio);
+const years = [author.born, author.died]
+  .filter((y) => y !== undefined && y !== null)
+  .map((y) => String(y).slice(0, 4));
+---
+
+<Base
+  title={`${author.name} · ${SITE_NAME}`}
+  description={author.bio?.split("\n")[0]}
+>
+  <PageHead
+    title={author.name}
+    lead={
+      [author.alias, years.join("–")].filter(Boolean).join(" · ") || undefined
+    }
+  />
+
+  {bio && <div class="prose indented section" set:html={bio} />}
+
+  {author.support && author.support.length > 0 && (
+    <section class="section indented" aria-labelledby="h-support">
+      <h2 id="h-support">{es.pages.support}</h2>
+      <ul class="plain">
+        {author.support.map((s) => (
+          <li>
+            <a href={s.url} rel="noopener">
+              {s.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {collections.length > 0 && (
+    <section class="section indented" aria-labelledby="h-col">
+      <h2 id="h-col">{es.pages.collections}</h2>
+      <p class="marks">
+        {collections.map((c) => (
+          <SeriesMark href={seriesUrl("collections", c.id)} title={c.title} />
+        ))}
+      </p>
+    </section>
+  )}
+
+  {tags.length > 0 && (
+    <section class="section indented" aria-labelledby="h-tags">
+      <h2 id="h-tags">{es.pages.tags}</h2>
+      <p class="marks">
+        {tags.map((t) => (
+          <SeriesMark href={seriesUrl("tags", t.id)} title={t.title} />
+        ))}
+      </p>
+    </section>
+  )}
+
+  <section class="section indented" aria-labelledby="h-works">
+    <h2 id="h-works">
+      {es.pages.works}{" "}
+      <span class="count">{es.pages.workCount(works.length)}</span>
+    </h2>
+    {works.length > 0 ? (
+      <WorkList works={works} edition={edition} />
+    ) : (
+      <p class="empty">{es.pages.noWorks}</p>
+    )}
+  </section>
+</Base>
+
+<style>
+  .marks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin: 0;
+  }
+  .plain {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .count {
+    font-size: var(--fs-ui);
+    font-weight: 400;
+    color: var(--faint);
+    margin-left: var(--s-2);
+  }
+</style>

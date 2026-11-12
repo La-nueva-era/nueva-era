@@ -1,0 +1,78 @@
+---
+// One collection or tag: description and its works in order.
+import Base from "../layouts/Base.astro";
+import PageHead from "./PageHead.astro";
+import WorkList from "./WorkList.astro";
+import { es } from "../i18n/es.ts";
+import type { Edition } from "../lib/edition.ts";
+import { markdown } from "../lib/markdown.ts";
+import { seriesWorks, type SeriesKind } from "../lib/series.ts";
+import { SITE_NAME } from "../site.config.ts";
+
+interface Props {
+  edition: Edition;
+  kind: SeriesKind;
+  id: string;
+}
+const { edition, kind, id } = Astro.props;
+const series = edition[kind].find((s) => s.id === id);
+if (!series) throw new Error(`unknown ${kind} «${id}»`);
+const author = edition.authors.find((a) => a.id === series.author);
+const works = seriesWorks(edition, kind, id);
+const description = await markdown(series.description);
+const kindLabel =
+  "kind" in series
+    ? es.pages.kind[series.kind as "album" | "ep" | "cycle"]
+    : undefined;
+---
+
+<Base
+  title={`${series.title} — ${author?.name ?? ""} · ${SITE_NAME}`}
+  description={series.description?.split("\n")[0]}
+>
+  <PageHead title={series.title}>
+    {author && (
+      <p class="byline">
+        <a href={`/${author.id}`}>{author.name}</a>
+      </p>
+    )}
+    <p class="meta">
+      {[kindLabel, es.pages.workCount(works.length)]
+        .filter(Boolean)
+        .join(" · ")}
+    </p>
+  </PageHead>
+  {description && <div class="prose indented section" set:html={description} />}
+  <section class="section indented">
+    {works.length > 0 ? (
+      <WorkList
+        works={works}
+        edition={edition}
+        positionIn={series.ordered ? { kind, id } : undefined}
+        marks={false}
+      />
+    ) : (
+      <p class="empty">{es.pages.noWorks}</p>
+    )}
+  </section>
+</Base>
+
+<style>
+  .byline {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-lead);
+    color: var(--muted);
+  }
+  .meta {
+    margin: var(--s-1) 0 0;
+    font-size: var(--fs-ui);
+    color: var(--faint);
+  }
+  .byline a {
+    text-decoration: none;
+  }
+  .byline a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+</style>
