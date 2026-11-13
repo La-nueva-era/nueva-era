@@ -15,6 +15,8 @@ interface Props {
   wide?: boolean;
   /** The site footer appears only on the home and about pages. */
   footer?: boolean;
+  /** Share image (Open Graph), as a path on the site. */
+  image?: string | undefined;
 }
 
 const {
@@ -23,8 +25,10 @@ const {
   noindex = false,
   wide = false,
   footer = false,
+  image = "/og/default.png",
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image, Astro.site);
 ---
 
 <!doctype html>
@@ -42,7 +46,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:title" content={title} />
     {description && <meta property="og:description" content={description} />}
     <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link
       rel="alternate"
       type="application/rss+xml"

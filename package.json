@@ -21,7 +21,9 @@
     "@fontsource/literata": "^5.3.0",
     "@lucide/astro": "^1.70.0",
     "astro": "^7.4.4",
-    "minisearch": "^7.2.0"
+    "minisearch": "^7.2.0",
+    "satori": "^0.63.2",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
