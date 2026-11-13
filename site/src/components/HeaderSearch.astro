@@ -1,0 +1,386 @@
+---
+import { Search, X } from "@lucide/astro";
+import Icon from "./Icon.astro";
+import { es } from "../i18n/es.ts";
+---
+
+<form class="searchbox" action="/buscar" method="get" role="search">
+  <button
+    class="open"
+    type="button"
+    aria-label={es.search.open}
+    aria-expanded="false"
+  >
+    <Icon icon={Search} size={17} />
+  </button>
+  <input
+    id="q"
+    name="q"
+    type="search"
+    placeholder={es.search.placeholder}
+    autocomplete="off"
+    spellcheck="false"
+    aria-label={es.search.label}
+    role="combobox"
+    aria-autocomplete="list"
+    aria-expanded="false"
+    aria-controls="sugg"
+  />
+  <kbd class="key" aria-hidden="true">
+    /
+  </kbd>
+  <button class="shut" type="button" aria-label={es.search.close}>
+    <Icon icon={X} size={20} />
+  </button>
+  <ul
+    class="sugg"
+    id="sugg"
+    role="listbox"
+    aria-label={es.search.label}
+    hidden
+  ></ul>
+</form>
+
+<script>
+  import { es } from "../i18n/es.ts";
+  import { getIndex } from "../scripts/search-index.ts";
+
+  const form = document.querySelector<HTMLFormElement>("form.searchbox");
+  const input = document.getElementById("q") as HTMLInputElement | null;
+  const list = document.getElementById("sugg");
+  const opener = form?.querySelector<HTMLButtonElement>(".open");
+
+  if (form && input && list) {
+    let active = -1;
+    let seq = 0;
+    const options = () => [
+      ...list.querySelectorAll<HTMLAnchorElement>("[role=option]"),
+    ];
+
+    const close = () => {
+      list.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+      active = -1;
+    };
+    const setActive = (i: number) => {
+      const opts = options();
+      opts.forEach((o, j) => o.setAttribute("aria-selected", String(j === i)));
+      active = i;
+      const id = opts[i]?.id;
+      if (id) input.setAttribute("aria-activedescendant", id);
+      else input.removeAttribute("aria-activedescendant");
+    };
+
+    const option = (
+      id: string,
+      href: string,
+      main: string,
+      who?: string,
+      cls?: string,
+    ) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "presentation");
+      const a = document.createElement("a");
+      a.id = id;
+      a.href = href;
+      a.setAttribute("role", "option");
+      a.setAttribute("aria-selected", "false");
+      a.tabIndex = -1;
+      if (cls) a.className = cls;
+      const t = document.createElement("span");
+      t.textContent = main;
+      a.append(t);
+      if (who) {
+        const w = document.createElement("span");
+        w.className = "who";
+        w.textContent = who;
+        a.append(w);
+      }
+      li.append(a);
+      return li;
+    };
+
+    const render = async () => {
+      const q = input.value.trim();
+      const mine = ++seq;
+      if (!q) return close();
+      const index = await getIndex();
+      if (mine !== seq) return; // a newer keystroke won
+      const items = (await import("../lib/search.ts"))
+        .suggest(index, q)
+        .map((s, i) => {
+          const w = index.works[s.work];
+          if (!w) return null;
+          const mark = w.marks[0];
+          const series = mark
+            ? ` — ${mark.title}${mark.position === undefined ? "" : `, ${mark.position}`}`
+            : "";
+          return option(`sugg-${i}`, w.url, w.title, `${w.author}${series}`);
+        });
+      list.replaceChildren(
+        ...items.filter((x) => x !== null),
+        option(
+          "sugg-all",
+          `/buscar?q=${encodeURIComponent(q)}`,
+          es.search.inVerses(q),
+          undefined,
+          "all",
+        ),
+      );
+      list.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      setActive(-1);
+    };
+
+    input.addEventListener("focus", () => {
+      void getIndex();
+      if (input.value.trim()) void render();
+    });
+    input.addEventListener("input", () => void render());
+    input.addEventListener("keydown", (e) => {
+      const opts = options();
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        if (list.hidden || opts.length === 0) return;
+        e.preventDefault();
+        // Cycles through -1 (back in the field) and every option.
+        const last = opts.length - 1;
+        if (e.key === "ArrowDown") setActive(active >= last ? -1 : active + 1);
+        else setActive(active <= -1 ? last : active - 1);
+      } else if (e.key === "Enter") {
+        const target = opts[active];
+        if (target) {
+          e.preventDefault();
+          location.href = target.href;
+        }
+      } else if (e.key === "Escape") {
+        collapse();
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!form.contains(e.target as Node)) close();
+    });
+
+    // Narrow screens: the field collapses to an icon that opens it as a
+    // full-screen panel; closing returns focus to the icon.
+    const expand = () => {
+      form.classList.add("expanded");
+      opener?.setAttribute("aria-expanded", "true");
+      input.focus();
+    };
+    const collapse = () => {
+      const was = form.classList.contains("expanded");
+      close();
+      input.blur();
+      form.classList.remove("expanded");
+      opener?.setAttribute("aria-expanded", "false");
+      if (was && opener && getComputedStyle(opener).display !== "none") {
+        opener.focus();
+      }
+    };
+    opener?.addEventListener("click", expand);
+    form
+      .querySelector<HTMLButtonElement>(".shut")
+      ?.addEventListener("click", collapse);
+
+    // "/" focuses the field from anywhere.
+    document.addEventListener("keydown", (e) => {
+      const t = e.target as Element;
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (t.closest("input, textarea, select, [contenteditable]")) return;
+      e.preventDefault();
+      expand();
+    });
+  }
+</script>
+
+<style>
+  .searchbox {
+    position: relative;
+    flex: 1;
+    max-width: 24rem;
+    margin: 0;
+  }
+  input {
+    width: 100%;
+    font: inherit;
+    font-size: var(--fs-ui-lg);
+    color: var(--ink);
+    background: var(--raise);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 0.4em 2.4em 0.4em 0.9em;
+    outline: none;
+    transition:
+      border-color var(--t),
+      background var(--t);
+  }
+  input::placeholder {
+    color: var(--muted);
+  }
+  input:hover {
+    border-color: var(--faint);
+  }
+  input:focus {
+    border-color: var(--muted);
+    background: var(--raise-2);
+  }
+  input:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  /* The "/" shortcut, shown while the field is empty and idle. */
+  .key {
+    position: absolute;
+    top: 50%;
+    right: 0.6em;
+    translate: 0 -50%;
+    min-width: 1.5em;
+    padding: 0 0.4em;
+    border: 1px solid var(--line);
+    border-radius: calc(var(--r) - 3px);
+    font: inherit;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    text-align: center;
+    color: var(--faint);
+    pointer-events: none;
+  }
+  input:focus ~ .key,
+  input:not(:placeholder-shown) ~ .key {
+    display: none;
+  }
+  .open,
+  .shut {
+    display: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    color: var(--muted);
+    border-radius: var(--r);
+    transition: color var(--t);
+  }
+  .open:hover,
+  .shut:hover {
+    color: var(--ink);
+  }
+  .sugg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 7;
+    list-style: none;
+    margin: 0;
+    background: var(--raise);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    padding: 0.35rem;
+  }
+  .sugg[hidden] {
+    display: none;
+  }
+  .sugg :global(a) {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6em;
+    text-decoration: none;
+    font-size: var(--fs-ui-lg);
+    padding: 0.45em 0.65em;
+    border-radius: calc(var(--r) - 3px);
+    transition: background var(--t-fast);
+  }
+  .sugg :global(a:hover),
+  .sugg :global(a[aria-selected="true"]) {
+    background: var(--raise-2);
+  }
+  .sugg :global(.who) {
+    color: var(--faint);
+    font-size: var(--fs-sm);
+    margin-left: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sugg :global(li:last-child) {
+    border-top: 1px solid var(--line);
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+  }
+  .sugg :global(.all) {
+    color: var(--muted);
+    font-size: var(--fs-ui);
+  }
+
+  /* Touch screens: 16px keeps iOS from zooming into the field. */
+  @media (pointer: coarse) {
+    input {
+      font-size: max(1rem, var(--fs-ui-lg));
+    }
+    .key {
+      display: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .searchbox {
+      flex: 0 0 auto;
+      max-width: none;
+      margin-left: auto;
+    }
+    .open {
+      display: grid;
+    }
+    input,
+    .key {
+      display: none;
+    }
+    .searchbox.expanded {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: var(--s-2);
+      padding: var(--s-3) var(--page-pad);
+      background: var(--bg);
+      overflow-y: auto;
+    }
+    .searchbox.expanded input {
+      display: block;
+      flex: 1;
+      min-height: 2.75rem;
+      padding-right: 0.9em;
+      font-size: 1rem;
+    }
+    .searchbox.expanded .open {
+      display: none;
+    }
+    .searchbox.expanded .shut {
+      display: grid;
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+    .searchbox.expanded .sugg {
+      position: static;
+      flex-basis: 100%;
+      padding: 0;
+      background: none;
+      border: 0;
+      box-shadow: none;
+    }
+    .searchbox.expanded .sugg :global(a) {
+      padding: 0.75em 0.25em;
+      border-radius: 0;
+      font-size: 1rem;
+    }
+    .searchbox.expanded .sugg :global(li + li) {
+      border-top: 1px solid var(--line);
+    }
+    :global(html:has(.searchbox.expanded)) {
+      overflow: hidden;
+    }
+  }
+</style>
