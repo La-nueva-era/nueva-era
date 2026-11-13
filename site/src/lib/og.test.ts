@@ -9,9 +9,7 @@ import {
   workArt,
 } from "./og.ts";
 
-// The longest title in the archive.
-const LONGEST =
-  "Tápame con las sábanas de la oscuridad, bésame la frente, y haz de esta cama la mortaja de una innecesaria muerte";
+const words = (n: number) => "palabra ".repeat(n).trim();
 
 describe("artBox", () => {
   it("takes the centre square of a maxres frame, above the subtitles", () => {
@@ -38,35 +36,33 @@ describe("fitTitle", () => {
   });
 
   it("steps down until a long title fits in three lines", async () => {
-    const title =
-      "Anatomía de la infelicidad inherente al individuo reacio al autoengaño";
+    const title = words(8);
     expect(await fitTitle(title)).toEqual({
-      size: 46,
+      size: 52,
       lines: 3,
       text: title,
       cut: false,
     });
   });
 
-  it("fits the longest title of the archive at 40px in four lines", async () => {
-    expect(await fitTitle(LONGEST)).toEqual({
+  it("uses a fourth line at the smallest size", async () => {
+    const title = words(12);
+    expect(await fitTitle(title)).toEqual({
       size: 40,
       lines: 4,
-      text: LONGEST,
+      text: title,
       cut: false,
     });
   });
 
   it("cuts a title too long even at 40px at a word boundary, with «…»", async () => {
-    const title = `${LONGEST} ${LONGEST}`;
-    const fit = await fitTitle(title);
-    expect(fit.size).toBe(40);
-    expect(fit.cut).toBe(true);
-    expect(fit.lines).toBeLessThanOrEqual(4);
-    expect(fit.text.endsWith("…")).toBe(true);
-    const kept = fit.text.slice(0, -1);
-    expect(title.startsWith(kept)).toBe(true);
-    expect(title[kept.length]).toBe(" ");
+    const fit = await fitTitle(words(40));
+    expect(fit).toEqual({
+      size: 40,
+      lines: 4,
+      text: `${words(fit.text.split(" ").length)}…`,
+      cut: true,
+    });
   });
 });
 
