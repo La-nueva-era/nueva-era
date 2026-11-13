@@ -1,0 +1,213 @@
+---
+import { ArrowRight } from "@lucide/astro";
+import { Image } from "astro:assets";
+import Icon from "../components/Icon.astro";
+import Base from "../layouts/Base.astro";
+import HomeVerses from "../components/HomeVerses.astro";
+import { es } from "../i18n/es.ts";
+import { loadEdition } from "../lib/edition.ts";
+import { SITE_NAME } from "../site.config.ts";
+import illustration from "../assets/nueva-era.png";
+
+const edition = await loadEdition();
+---
+
+<Base title={SITE_NAME} description={es.home.subtitle} wide footer>
+  <section class="hero" aria-labelledby="title">
+    <div class="side">
+      <hgroup>
+        <h1 id="title">{SITE_NAME}</h1>
+        <p class="sub">{es.home.subtitle}</p>
+      </hgroup>
+      <HomeVerses fragments={edition.fragments} />
+    </div>
+    <Image
+      class="plate"
+      src={illustration}
+      alt={es.home.imageAlt}
+      widths={[380, 580, 758]}
+      sizes="(max-width: 900px) min(100vw, 30rem), 580px"
+      loading="eager"
+      fetchpriority="high"
+    />
+  </section>
+
+  <section class="intro" aria-label={es.home.subtitle}>
+    {es.home.intro.map((p) => (
+      <p>{p}</p>
+    ))}
+    <div class="actions">
+      {edition.authors.map((a) => (
+        <a class="cta" href={`/${a.id}`}>
+          <span>{es.home.readAuthor(a.name)}</span>
+          <Icon icon={ArrowRight} />
+        </a>
+      ))}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 11fr) minmax(0, 10fr);
+    grid-template-areas: "plate side";
+    column-gap: var(--s-16);
+    padding-top: var(--s-12);
+  }
+  /* As tall as the drawing: title at its top edge, verse controls at its bottom. */
+  .side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .side > :global([data-verses]) {
+    flex: 1;
+  }
+  hgroup {
+    margin: 0 0 var(--s-10);
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(2rem, 3.4vw, 2.7rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+  .sub {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-lead);
+    font-style: italic;
+    color: var(--muted);
+  }
+  .plate {
+    grid-area: plate;
+    /* Decorative: never selected or dragged with the page text. */
+    user-select: none;
+    -webkit-user-drag: none;
+    align-self: start;
+    justify-self: end;
+    width: 100%;
+    max-width: 580px;
+    height: auto;
+    /* The drawing's black becomes the page's own background. */
+    mix-blend-mode: lighten;
+    /* The video frame cut the drawing at the sides and bottom; fade those
+       edges instead of showing the cut. */
+    mask-image:
+      linear-gradient(to right, transparent, #000 7%, #000 93%, transparent),
+      linear-gradient(to bottom, #000 82%, transparent);
+    mask-composite: intersect;
+  }
+  /* On paper the drawing is shown as what it is: a black plate. */
+  :global(:root[data-theme="light"]) .plate {
+    mix-blend-mode: normal;
+    mask-image: none;
+    border-radius: var(--r);
+  }
+  @media (prefers-color-scheme: light) {
+    :global(:root:not([data-theme])) .plate {
+      mix-blend-mode: normal;
+      mask-image: none;
+      border-radius: var(--r);
+    }
+  }
+
+  /* A centred block, wide and set larger, keeping lines near 70 characters. */
+  .intro {
+    max-width: 46rem;
+    margin: var(--s-24) auto 0;
+    font-size: var(--fs-intro);
+    line-height: 1.55;
+  }
+  .intro p {
+    margin: 0 0 var(--s-4);
+    text-wrap: pretty;
+  }
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-3);
+    margin-top: var(--s-10);
+    font-size: var(--fs);
+  }
+  .cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.7em 1.15em 0.7em 1.4em;
+    border: 1px solid var(--cta-line);
+    border-radius: var(--r-pill);
+    box-shadow: inset 0 1px 0 var(--cta-gleam);
+    color: var(--ink);
+    text-decoration: none;
+    transition:
+      background var(--t),
+      color var(--t),
+      border-color var(--t);
+  }
+  .cta svg {
+    transition: transform var(--t);
+  }
+  .cta:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+  .cta:hover svg {
+    transform: translateX(3px);
+  }
+  /* On paper an ink-filled pill weighs too much: a soft fill instead. */
+  :global(:root[data-theme="light"]) .cta:hover {
+    background: var(--raise-2);
+    border-color: var(--ink);
+    color: var(--ink);
+    box-shadow: none;
+  }
+  @media (prefers-color-scheme: light) {
+    :global(:root:not([data-theme])) .cta:hover {
+      background: var(--raise-2);
+      border-color: var(--ink);
+      color: var(--ink);
+      box-shadow: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .hero {
+      grid-template-columns: 1fr;
+      grid-template-areas: "title" "plate" "verses";
+      /* One column as wide as the drawing, centred like the intro below. */
+      max-width: 30rem;
+      margin-inline: auto;
+      padding-top: var(--s-8);
+    }
+    .side {
+      display: contents;
+    }
+    hgroup {
+      grid-area: title;
+      margin-bottom: var(--s-8);
+    }
+    .plate {
+      justify-self: start;
+      max-width: 30rem;
+    }
+    .side :global([data-verses]) {
+      grid-area: verses;
+      margin-top: var(--s-8);
+    }
+    .intro {
+      margin-top: var(--s-16);
+    }
+  }
+  @media (max-width: 640px) {
+    .intro {
+      font-size: var(--fs);
+    }
+    .actions {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -7,6 +7,22 @@ export const es = {
     text: "Este proyecto está en desarrollo: algunas obras están incompletas y pueden tener errores de transcripción.",
     close: "Cerrar aviso",
   },
+  home: {
+    subtitle: "Archivo de la obra de Solitario y Ozelot",
+    intro: [
+      "ESTADO DEL PROYECTO: EN PROGRESO. Las obras no están completas aún.",
+      '"La nueva era" es un archivo NO OFICIAL de la obra de Solitario y Ozelot. Este proyecto tiene como finalidad reunir la obra completa de ambos artistas en un solo lugar, para facilitar la lectura y estudio de las mismas. El sitio web es completamente de código abierto.',
+      "Cada obra individual contiene la interpretación del propio autor en su formato original, junto al texto del poema con sus versos numerados e información adicional que puede ser de utilidad para contextualizarla o interpretarla correctamente. El texto completo del poema puede copiarse al portapapeles fácilmente; también se pueden seleccionar fragmentos y copiar un link para compartir la página con el fragmento seleccionado resaltado.",
+      "El sitio cuenta además con distintas herramientas que permiten navegar y consultar las obras de manera eficiente, como la búsqueda de texto, donde se pueden ingresar títulos, nombres de colecciones, frases o términos específicos.",
+    ],
+    readAuthor: (name: string) => `Leer obra de ${name}`,
+    verses: "Versos de la obra",
+    previous: "Verso anterior",
+    next: "Verso siguiente",
+    show: (n: number, total: number) => `Mostrar verso ${n} de ${total}`,
+    imageAlt:
+      "Grabado en blanco y negro: una figura encapuchada de rostro descarnado coloca una piedra con runas sobre una escalinata de bloques.",
+  },
   footer: {
     label: "Pie de página",
     line: "Archivo de la obra de Solitario y Ozelot. Proyecto independiente y no oficial, sin vínculo con los autores.",

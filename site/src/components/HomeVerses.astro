@@ -1,0 +1,350 @@
+---
+import { ChevronLeft, ChevronRight } from "@lucide/astro";
+import Icon from "./Icon.astro";
+import { es } from "../i18n/es.ts";
+import type { Fragment } from "../lib/fragments.ts";
+
+interface Props {
+  fragments: Fragment[];
+}
+const { fragments } = Astro.props;
+
+const length = (f: Fragment) => f.verses.join(" ").length;
+const size = (f: Fragment) =>
+  length(f) <= 90 ? "short" : length(f) <= 220 ? "medium" : "long";
+---
+
+{fragments.length > 0 && (
+  <section
+    class="verses"
+    data-verses
+    aria-roledescription="carrusel"
+    aria-label={es.home.verses}
+  >
+    <span class="mark" aria-hidden="true">
+      “
+    </span>
+    <div class="stage">
+      {fragments.map((f, i) => (
+        <figure
+          class:list={[size(f), { on: i === 0 }]}
+          aria-hidden={i === 0 ? undefined : "true"}
+          inert={i !== 0}
+        >
+          <blockquote data-scroll>
+            {f.verses.map((v, j) => (
+              <span>
+                {j === 0 && (f.cut === "start" || f.cut === "both") && (
+                  <span class="cut">[…] </span>
+                )}
+                {f.highlight?.includes(j) ? <mark>{v}</mark> : v}
+                {j === f.verses.length - 1 &&
+                  (f.cut === "end" || f.cut === "both") && (
+                    <span class="cut"> […]</span>
+                  )}
+              </span>
+            ))}
+          </blockquote>
+          <figcaption>
+            <a href={f.href}>{f.title}</a>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+    {fragments.length > 1 && (
+      <div class="controls">
+        <button
+          type="button"
+          class="step"
+          data-step="-1"
+          aria-label={es.home.previous}
+        >
+          <Icon icon={ChevronLeft} />
+        </button>
+        <div class="dots">
+          {fragments.map((_, i) => (
+            <button
+              type="button"
+              class="dot"
+              data-go={i}
+              aria-label={es.home.show(i + 1, fragments.length)}
+              aria-current={i === 0 ? "true" : undefined}
+            />
+          ))}
+        </div>
+        <button
+          type="button"
+          class="step"
+          data-step="1"
+          aria-label={es.home.next}
+        >
+          <Icon icon={ChevronRight} />
+        </button>
+      </div>
+    )}
+  </section>
+)}
+
+<script>
+  const ROTATE_MS = 7000;
+  const box = document.querySelector<HTMLElement>("[data-verses]");
+  const figures = box ? [...box.querySelectorAll<HTMLElement>("figure")] : [];
+  const dots = box
+    ? [...box.querySelectorAll<HTMLButtonElement>("[data-go]")]
+    : [];
+
+  /** Fades the edges that hide text, and makes a scrolling passage keyboard-reachable. */
+  const fit = (el: HTMLElement) => {
+    // A few pixels of slack absorb italic overhang; only real overflow scrolls.
+    const overflows = el.scrollHeight - el.clientHeight > 6;
+    el.classList.toggle("scrollable", overflows);
+    el.classList.toggle("fade-top", overflows && el.scrollTop > 1);
+    el.classList.toggle(
+      "fade-bottom",
+      overflows && el.scrollTop + el.clientHeight < el.scrollHeight - 1,
+    );
+    if (overflows) el.tabIndex = 0;
+    else el.removeAttribute("tabindex");
+  };
+  const scrollers = box
+    ? [...box.querySelectorAll<HTMLElement>("[data-scroll]")]
+    : [];
+  scrollers.forEach((el) => {
+    el.addEventListener("scroll", () => fit(el), { passive: true });
+    new ResizeObserver(() => fit(el)).observe(el);
+  });
+
+  if (box && figures.length > 1) {
+    let current = 0;
+    let held = false;
+    let timer: number | undefined;
+
+    const show = (next: number) => {
+      const n = (next + figures.length) % figures.length;
+      figures.forEach((f, i) => {
+        const on = i === n;
+        f.classList.toggle("on", on);
+        f.inert = !on;
+        if (on) f.removeAttribute("aria-hidden");
+        else f.setAttribute("aria-hidden", "true");
+      });
+      dots.forEach((d, i) =>
+        i === n
+          ? d.setAttribute("aria-current", "true")
+          : d.removeAttribute("aria-current"),
+      );
+      const scroller = figures[n]?.querySelector<HTMLElement>("[data-scroll]");
+      if (scroller) {
+        scroller.scrollTop = 0;
+        fit(scroller);
+      }
+      current = n;
+    };
+    const stop = () => clearInterval(timer);
+
+    box.querySelectorAll<HTMLButtonElement>("[data-step]").forEach((b) =>
+      b.addEventListener("click", () => {
+        stop();
+        show(current + Number(b.dataset.step));
+      }),
+    );
+    dots.forEach((d) =>
+      d.addEventListener("click", () => {
+        stop();
+        show(Number(d.dataset.go));
+      }),
+    );
+
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      box.addEventListener("pointerenter", () => (held = true));
+      box.addEventListener("pointerleave", () => (held = false));
+      box.addEventListener("focusin", () => (held = true));
+      box.addEventListener("focusout", () => (held = false));
+      timer = window.setInterval(() => {
+        if (!held && !document.hidden) show(current + 1);
+      }, ROTATE_MS);
+    }
+  }
+</script>
+
+<style>
+  .verses {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-width: 36rem;
+  }
+  .mark {
+    display: block;
+    height: 2.4rem;
+    font-size: 4.6rem;
+    line-height: 1;
+    color: var(--muted);
+  }
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 13rem;
+  }
+  figure {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.9s ease,
+      visibility 0s linear 0.9s;
+  }
+  figure.on {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.9s ease;
+  }
+  blockquote {
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  blockquote.scrollable {
+    overflow-y: auto;
+  }
+  blockquote.fade-bottom {
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent);
+  }
+  blockquote.fade-top {
+    mask-image: linear-gradient(to top, #000 calc(100% - 3rem), transparent);
+  }
+  blockquote.fade-top.fade-bottom {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 3rem,
+      #000 calc(100% - 3rem),
+      transparent
+    );
+  }
+  blockquote > span {
+    display: block;
+    font-style: italic;
+    letter-spacing: -0.005em;
+  }
+  /* A highlighted verse: a fine underline under the text, nothing else. */
+  mark {
+    color: inherit;
+    background: none;
+    text-decoration: underline;
+    text-decoration-thickness: 0.06em;
+    text-decoration-color: var(--muted);
+    text-underline-offset: 0.22em;
+    text-decoration-skip-ink: auto;
+  }
+  .cut {
+    color: var(--muted);
+  }
+  .short span {
+    font-size: clamp(1.5rem, 2.3vw, 1.95rem);
+    line-height: 1.38;
+  }
+  .medium span {
+    font-size: clamp(1.3rem, 1.8vw, 1.55rem);
+    line-height: 1.45;
+  }
+  .long span {
+    font-size: 1.3rem;
+    line-height: 1.55;
+  }
+  figcaption {
+    flex: none;
+    margin-top: var(--s-4);
+  }
+  figcaption a {
+    color: var(--muted);
+    text-decoration-color: var(--line);
+  }
+  figcaption a:hover {
+    color: var(--ink);
+    text-decoration-color: var(--muted);
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    margin: var(--s-6) 0 0 -0.55rem;
+  }
+  .step {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    color: var(--muted);
+    transition:
+      color var(--t),
+      background var(--t);
+  }
+  .step:hover {
+    color: var(--ink);
+    background: var(--raise);
+  }
+  .dots {
+    display: flex;
+  }
+  .dot {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 2.25rem;
+  }
+  .dot::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1px solid var(--muted);
+    transition:
+      background var(--t),
+      border-color var(--t);
+  }
+  .dot:hover::before {
+    border-color: var(--ink);
+  }
+  .dot[aria-current="true"]::before {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* Narrow screens: no image beside to match, so the frame has a fixed
+     height of a few lines; longer passages scroll inside it. Fixed, so the
+     page below never moves when the passage changes. */
+  @media (max-width: 900px) {
+    .stage {
+      flex: none;
+      min-height: 0;
+      height: 11rem;
+    }
+    .controls {
+      margin-top: var(--s-3);
+    }
+    .short span {
+      font-size: 1.5rem;
+    }
+    .medium span {
+      font-size: 1.3rem;
+    }
+    .long span {
+      font-size: 1.2rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    figure,
+    figure.on {
+      transition: none;
+    }
+  }
+</style>
