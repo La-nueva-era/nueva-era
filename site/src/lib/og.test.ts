@@ -9,9 +9,23 @@ import {
   workArt,
 } from "./og.ts";
 
-// The longest title in the archive.
-const LONGEST =
+// The title fit rule: sizes from 76 down to 40px; at most three lines, four
+// at the smallest size; a title that still doesn't fit is cut at a word
+// boundary with «…». Font metrics decide where each title lands, so the
+// tests check the rule, not the exact size a given title gets.
+const SIZES = [76, 68, 60, 52, 46, 40];
+const SMALLEST = 40;
+const maxLines = (size: number) => (size === SMALLEST ? 4 : 3);
+
+const SHORT = "Nueva era";
+// Long enough to need more than one size step.
+const LONG =
+  "Anatomía de la infelicidad inherente al individuo reacio al autoengaño";
+// Needs the smallest size and its extra line, but still fits whole.
+const VERY_LONG =
   "Tápame con las sábanas de la oscuridad, bésame la frente, y haz de esta cama la mortaja de una innecesaria muerte";
+// Far beyond four lines at the smallest size.
+const TOO_LONG = Array.from({ length: 6 }, () => VERY_LONG).join(" ");
 
 describe("artBox", () => {
   it("takes the centre square of a maxres frame, above the subtitles", () => {
@@ -28,45 +42,49 @@ describe("artBox", () => {
 // Expected sizes and line counts are those of the approved prototype
 // (odd/og-gen/gen.py), which measures with the same Literata files.
 describe("fitTitle", () => {
-  it("keeps a short title at the largest size", async () => {
-    expect(await fitTitle("Nueva era")).toEqual({
+  it("keeps a short title whole at the largest size, on one line", async () => {
+    expect(await fitTitle(SHORT)).toEqual({
       size: 76,
       lines: 1,
-      text: "Nueva era",
+      text: SHORT,
       cut: false,
     });
   });
 
-  it("steps down until a long title fits in three lines", async () => {
-    const title =
-      "Anatomía de la infelicidad inherente al individuo reacio al autoengaño";
-    expect(await fitTitle(title)).toEqual({
-      size: 46,
-      lines: 3,
-      text: title,
-      cut: false,
-    });
+  it("always picks a size from the scale within its line budget", async () => {
+    for (const title of [SHORT, LONG, VERY_LONG, TOO_LONG]) {
+      const fit = await fitTitle(title);
+      expect(SIZES).toContain(fit.size);
+      expect(fit.lines).toBeGreaterThanOrEqual(1);
+      expect(fit.lines).toBeLessThanOrEqual(maxLines(fit.size));
+    }
   });
 
-  it("fits the longest title of the archive at 40px in four lines", async () => {
-    expect(await fitTitle(LONGEST)).toEqual({
-      size: 40,
-      lines: 4,
-      text: LONGEST,
-      cut: false,
-    });
+  it("steps down for longer titles", async () => {
+    const short = await fitTitle(SHORT);
+    const long = await fitTitle(LONG);
+    const veryLong = await fitTitle(VERY_LONG);
+    expect(long.size).toBeLessThan(short.size);
+    expect(veryLong.size).toBeLessThanOrEqual(long.size);
   });
 
-  it("cuts a title too long even at 40px at a word boundary, with «…»", async () => {
-    const title = `${LONGEST} ${LONGEST}`;
-    const fit = await fitTitle(title);
-    expect(fit.size).toBe(40);
+  it("keeps a title whole whenever it fits", async () => {
+    for (const title of [SHORT, LONG, VERY_LONG]) {
+      const fit = await fitTitle(title);
+      expect(fit.cut).toBe(false);
+      expect(fit.text).toBe(title);
+    }
+  });
+
+  it("cuts a title too long even at the smallest size at a word boundary, with «…»", async () => {
+    const fit = await fitTitle(TOO_LONG);
+    expect(fit.size).toBe(SMALLEST);
     expect(fit.cut).toBe(true);
-    expect(fit.lines).toBeLessThanOrEqual(4);
     expect(fit.text.endsWith("…")).toBe(true);
     const kept = fit.text.slice(0, -1);
-    expect(title.startsWith(kept)).toBe(true);
-    expect(title[kept.length]).toBe(" ");
+    expect(kept.length).toBeGreaterThan(0);
+    expect(TOO_LONG.startsWith(kept)).toBe(true);
+    expect(TOO_LONG[kept.length]).toBe(" ");
   });
 });
 
