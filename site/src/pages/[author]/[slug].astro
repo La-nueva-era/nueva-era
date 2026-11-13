@@ -13,6 +13,7 @@ import { plainText, segments } from "../../lib/parse.ts";
 import { hasFraming } from "../../lib/packs.ts";
 import { seriesTitle, seriesUrl } from "../../lib/series.ts";
 import { jsonLdScript, workJsonLd } from "../../lib/jsonld.ts";
+import { workArt } from "../../lib/og.ts";
 import { SITE_NAME, SITE_URL } from "../../site.config.ts";
 
 export async function getStaticPaths() {
@@ -82,6 +83,10 @@ const description = work.stanzas
   .map((l) => plainText(l.text))
   .join(" / ");
 const youtubeUrl = `https://www.youtube.com/watch?v=${meta.youtube.id}`;
+// Its own share image when the thumbnail could be fetched (see /og/).
+const ogImage = (await workArt(meta.youtube.id))
+  ? `/og${work.url}.jpg`
+  : undefined;
 
 const ld = jsonLdScript(
   workJsonLd({
@@ -115,6 +120,7 @@ const ld = jsonLdScript(
   title={`«${meta.title}» — ${author.name} · ${SITE_NAME}`}
   description={description || undefined}
   noindex={!work.public}
+  image={ogImage}
 >
   <script slot="head" type="application/ld+json" set:html={ld} />
   <div class="titlebar indented">
