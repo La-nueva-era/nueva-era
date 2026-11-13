@@ -1,0 +1,114 @@
+---
+// An alphabetical index grouped by initial letter, with tabs between the
+// edition's indices.
+import Base from "../layouts/Base.astro";
+import PageHead from "./PageHead.astro";
+import { es } from "../i18n/es.ts";
+import { alphabetical, initial } from "../lib/alpha.ts";
+import { SITE_NAME } from "../site.config.ts";
+
+export type Entry = { text: string; href: string; sub: string };
+interface Props {
+  title: string;
+  entries: Entry[];
+}
+const { title, entries } = Astro.props;
+const sorted = alphabetical(entries, (e) => e.text);
+const letters = [...new Set(sorted.map((e) => initial(e.text)))];
+const tabs = [
+  { href: "/indice/titulos", label: es.indices.titles },
+  { href: "/indice/primeros-versos", label: es.indices.firstVerses },
+];
+const path = Astro.url.pathname;
+---
+
+<Base title={`${title} · ${SITE_NAME}`}>
+  <PageHead title={title} lead={es.pages.workCount(entries.length)}>
+    <nav class="tabs" aria-label={es.nav.indices}>
+      {tabs.map((t) => (
+        <a href={t.href} aria-current={path === t.href ? "page" : undefined}>
+          {t.label}
+        </a>
+      ))}
+    </nav>
+  </PageHead>
+  {entries.length === 0 && <p class="empty indented">{es.pages.noWorks}</p>}
+  {letters.length > 1 && (
+    <p class="letters indented">
+      {letters.map((l) => (
+        <a href={`#l-${l}`}>{l}</a>
+      ))}
+    </p>
+  )}
+  {letters.map((l) => (
+    <section class="section indented" id={`l-${l}`}>
+      <h2>{l}</h2>
+      <ul class="entries">
+        {sorted
+          .filter((e) => initial(e.text) === l)
+          .map((e) => (
+            <li>
+              <a href={e.href}>{e.text}</a>
+              <span class="sub">{e.sub}</span>
+            </li>
+          ))}
+      </ul>
+    </section>
+  ))}
+</Base>
+
+<style>
+  .tabs {
+    display: flex;
+    gap: var(--s-5);
+    margin-top: var(--s-4);
+    font-size: var(--fs-ui);
+    color: var(--muted);
+  }
+  .tabs a {
+    text-decoration: none;
+  }
+  .tabs a:hover,
+  .tabs a[aria-current="page"] {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+  .letters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-3);
+    margin: 0 0 var(--s-10);
+    color: var(--muted);
+    font-size: var(--fs-ui);
+  }
+  .letters a {
+    text-decoration: none;
+  }
+  .letters a:hover {
+    color: var(--ink);
+  }
+  .entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-1) var(--s-3);
+    padding: var(--s-1) 0;
+  }
+  li a {
+    text-decoration: none;
+  }
+  li a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+  .sub {
+    color: var(--faint);
+    font-size: var(--fs-ui);
+  }
+</style>

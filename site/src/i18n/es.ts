@@ -64,6 +64,10 @@ export const es = {
     collection: (title: string) => `Colección: ${title}`,
     tag: (title: string) => `Etiqueta: ${title}`,
   },
+  indices: {
+    titles: "Índice de títulos",
+    firstVerses: "Índice de primeros versos",
+  },
   pages: {
     works: "Obras",
     collections: "Colecciones",

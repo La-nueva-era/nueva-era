@@ -1,0 +1,17 @@
+---
+import AlphaIndex from "../../components/AlphaIndex.astro";
+import { es } from "../../i18n/es.ts";
+import { loadEdition } from "../../lib/edition.ts";
+import { plainText } from "../../lib/parse.ts";
+
+const { works } = await loadEdition();
+const entries = works
+  .filter((w) => w.public && w.firstVerse !== "")
+  .map((w) => ({
+    text: plainText(w.firstVerse),
+    href: `${w.url}#v1`,
+    sub: `${w.meta.title} · ${w.author.name}`,
+  }));
+---
+
+<AlphaIndex title={es.indices.firstVerses} entries={entries} />
