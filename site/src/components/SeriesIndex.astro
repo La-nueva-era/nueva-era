@@ -1,0 +1,76 @@
+---
+// Index of collections or of tags, grouped by author.
+import Base from "../layouts/Base.astro";
+import PageHead from "./PageHead.astro";
+import { es } from "../i18n/es.ts";
+import type { Edition } from "../lib/edition.ts";
+import { seriesUrl, seriesWorks, type SeriesKind } from "../lib/series.ts";
+import { SITE_NAME } from "../site.config.ts";
+
+interface Props {
+  edition: Edition;
+  kind: SeriesKind;
+}
+const { edition, kind } = Astro.props;
+const title = kind === "collections" ? es.pages.collections : es.pages.tags;
+const all = edition[kind];
+---
+
+<Base title={`${title} · ${SITE_NAME}`}>
+  <PageHead title={title} />
+  {all.length === 0 && (
+    <p class="empty indented">
+      {kind === "collections" ? es.pages.noCollections : es.pages.noTags}
+    </p>
+  )}
+  {edition.authors.map((a) => {
+    const own = all.filter((s) => s.author === a.id);
+    return (
+      own.length > 0 && (
+        <section class="section indented">
+          <h2>{a.name}</h2>
+          <ul class="series">
+            {own.map((s) => (
+              <li>
+                <a href={seriesUrl(kind, s.id)}>{s.title}</a>
+                <span class="meta">
+                  {"kind" in s
+                    ? `${es.pages.kind[s.kind as "album" | "ep" | "cycle"]} · `
+                    : ""}
+                  {es.pages.workCount(seriesWorks(edition, kind, s.id).length)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    );
+  })}
+</Base>
+
+<style>
+  .series {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-1) var(--s-3);
+    padding: var(--s-2) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  li a {
+    text-decoration: none;
+  }
+  li a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--faint);
+  }
+  .meta {
+    color: var(--faint);
+    font-size: var(--fs-ui);
+  }
+</style>

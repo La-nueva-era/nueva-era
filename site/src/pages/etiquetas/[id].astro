@@ -1,0 +1,13 @@
+---
+import SeriesPage from "../../components/SeriesPage.astro";
+import { loadEdition } from "../../lib/edition.ts";
+
+export async function getStaticPaths() {
+  const edition = await loadEdition();
+  return edition.tags.map((s) => ({ params: { id: s.id } }));
+}
+
+const edition = await loadEdition();
+---
+
+<SeriesPage edition={edition} kind="tags" id={Astro.params.id} />
