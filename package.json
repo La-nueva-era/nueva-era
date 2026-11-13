@@ -20,7 +20,8 @@
     "@astrojs/markdown-remark": "^7.3.5",
     "@fontsource/literata": "^5.3.0",
     "@lucide/astro": "^1.70.0",
-    "astro": "^7.4.4"
+    "astro": "^7.4.4",
+    "minisearch": "^7.2.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

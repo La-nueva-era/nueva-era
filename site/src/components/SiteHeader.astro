@@ -1,8 +1,9 @@
 ---
-// Global header: wordmark, section links and the theme switch. Sticky; it
-// turns to glass once the page scrolls under it.
+// Global header: wordmark, search field, section links and the
+// theme switch. Sticky; it turns to glass once the page scrolls under it.
 // On narrow screens the links move to a row of their own under the bar,
 // which scrolls away with the page.
+import HeaderSearch from "./HeaderSearch.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import { es } from "../i18n/es.ts";
 import { loadEdition } from "../lib/edition.ts";
@@ -28,6 +29,7 @@ const links = [
     <a class="wordmark" href="/">
       {es.site.name}
     </a>
+    <HeaderSearch />
     <nav class="links wide" aria-label={es.nav.label}>
       {links.map((l) => (
         <a href={l.href} aria-current={l.current ? "page" : undefined}>
