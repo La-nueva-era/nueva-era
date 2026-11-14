@@ -93,7 +93,7 @@ export const es = {
     placeholder: "Buscar en la obra…",
     open: "Abrir la búsqueda",
     close: "Cerrar la búsqueda",
-    inVerses: (q: string) => `Buscar «${q}» en los versos →`,
+    inVerses: (q: string) => `Buscar «${q}» en los versos`,
     title: "Buscar",
     query: "Palabras",
     author: "Autor",
