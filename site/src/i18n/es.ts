@@ -24,9 +24,14 @@ export const es = {
       "Grabado en blanco y negro: una figura encapuchada de rostro descarnado coloca una piedra con runas sobre una escalinata de bloques.",
   },
   footer: {
-    label: "Pie de página",
     line: "Archivo de la obra de Solitario y Ozelot. Proyecto independiente y no oficial, sin vínculo con los autores.",
     code: "Código fuente",
+    llms: {
+      title: "Para LLMs",
+      full: "Obra completa de Solitario y Ozelot",
+      author: (name: string) => `Obra de ${name}`,
+      index: "Índice de todos los archivos",
+    },
     rss: "RSS",
   },
   nav: {

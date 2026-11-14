@@ -1,49 +1,88 @@
 ---
 // Site footer: only on the home and about pages.
+import { Rss } from "@lucide/astro";
+import Icon from "./Icon.astro";
 import { es } from "../i18n/es.ts";
+import { loadEdition } from "../lib/edition.ts";
+import { approxTokens } from "../lib/pack.ts";
+import { authorPack, fullPack, hasFraming } from "../lib/packs.ts";
 import { REPO_URL } from "../site.config.ts";
 
 interface Props {
   wide?: boolean;
 }
 const { wide = false } = Astro.props;
-const links = [["/rss.xml", es.footer.rss]] as const;
+// Files for language models, with their approximate size.
+const t = es.footer.llms;
+const llms = hasFraming
+  ? [
+      {
+        href: "/llms-full.txt",
+        file: "llms-full.txt",
+        text: t.full,
+        size: approxTokens(await fullPack()),
+      },
+      ...(await Promise.all(
+        (await loadEdition()).authors.map(async (a) => ({
+          href: `/pack/${a.id}.md`,
+          file: `${a.id}.md`,
+          text: t.author(a.name),
+          size: approxTokens(await authorPack(a.id)),
+        })),
+      )),
+      { href: "/llms.txt", file: "llms.txt", text: t.index, size: undefined },
+    ]
+  : [];
 ---
 
 <footer class:list={["foot", { wide }]}>
-  <div>
+  <div class="site">
     <p class="name">{es.site.name}</p>
     <p class="line">{es.footer.line}</p>
-    <a class="code" href={REPO_URL}>
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
-      </svg>
-      {es.footer.code}
-    </a>
+    <div class="links">
+      <a class="code" href={REPO_URL}>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+        {es.footer.code}
+      </a>
+      <a class="code" href="/rss.xml">
+        <Icon icon={Rss} size={16} />
+        {es.footer.rss}
+      </a>
+    </div>
   </div>
-  <nav aria-label={es.footer.label}>
-    <ul>
-      {links.map(([href, label]) => (
-        <li>
-          <a href={href}>{label}</a>
-        </li>
-      ))}
-    </ul>
-  </nav>
+  {llms.length > 0 && (
+    <section class="llms" aria-labelledby="llms-title">
+      <h2 id="llms-title" class="name">
+        {t.title}
+      </h2>
+      <ul>
+        {llms.map((f) => (
+          <li>
+            <a href={f.href}>{f.file}</a>
+            <span>
+              {f.text}
+              {f.size && ` · ${f.size}`}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
 </footer>
 
 <style>
   .foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     gap: var(--s-8) var(--s-16);
     max-width: var(--page-max);
     margin: 0 auto;
@@ -65,6 +104,11 @@ const links = [["/rss.xml", es.footer.rss]] as const;
     font-size: var(--fs-body-sm);
     color: var(--muted);
   }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
   .code {
     display: inline-flex;
     align-items: center;
@@ -85,13 +129,23 @@ const links = [["/rss.xml", es.footer.rss]] as const;
     border-color: var(--muted);
     background: var(--raise);
   }
-  ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-3) var(--s-6);
-    margin: 0;
+  h2.name {
+    font-size: inherit;
+  }
+  .llms ul {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--s-1) var(--s-4);
+    margin: var(--s-2) 0 0;
     padding: 0;
     list-style: none;
+  }
+  .llms li {
+    display: contents;
+  }
+  .llms span {
+    font-size: var(--fs-body-sm);
+    color: var(--faint);
   }
   ul a {
     font-size: var(--fs-body-sm);
@@ -101,6 +155,11 @@ const links = [["/rss.xml", es.footer.rss]] as const;
   }
   ul a:hover {
     color: var(--ink);
+  }
+  @media (max-width: 900px) {
+    .foot {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
   @media (max-width: 640px) {
     .foot {

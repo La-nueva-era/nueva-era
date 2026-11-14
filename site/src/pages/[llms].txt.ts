@@ -3,10 +3,12 @@
 import type { APIRoute } from "astro";
 import { es } from "../i18n/es.ts";
 import { loadEdition } from "../lib/edition.ts";
+import { approxTokens } from "../lib/pack.ts";
 import {
+  authorPack,
   framingSummary,
+  fullPack,
   hasFraming,
-  packFile,
   textResponse,
 } from "../lib/packs.ts";
 import { SITE_NAME, SITE_URL } from "../site.config.ts";
@@ -20,13 +22,11 @@ export function getStaticPaths() {
 export const GET: APIRoute = async ({ params }) => {
   const edition = await loadEdition();
   if (params.llms === "llms-full") {
-    return textResponse(
-      await packFile(edition.works.filter((w) => w.public)),
-      "text/plain",
-    );
+    return textResponse(await fullPack(), "text/plain");
   }
   const url = (path: string) => new URL(path, SITE_URL).href;
-  const link = (path: string, label: string) => `- [${label}](${url(path)})`;
+  const link = (path: string, label: string, notes?: string) =>
+    `- [${label}](${url(path)})${notes ? `: ${notes}` : ""}`;
   const lines = [
     `# ${SITE_NAME}`,
     "",
@@ -34,10 +34,16 @@ export const GET: APIRoute = async ({ params }) => {
     "",
     `## ${es.pack.files}`,
     "",
-    link("/llms-full.txt", es.pack.full),
-    ...edition.authors.map((a) =>
-      link(`/pack/${a.id}.md`, es.pack.author(a.name)),
-    ),
+    link("/llms-full.txt", es.pack.full, approxTokens(await fullPack())),
+    ...(await Promise.all(
+      edition.authors.map(async (a) =>
+        link(
+          `/pack/${a.id}.md`,
+          es.pack.author(a.name),
+          approxTokens(await authorPack(a.id)),
+        ),
+      ),
+    )),
     ...edition.collections.map((c) =>
       link(`/pack/colecciones/${c.id}.md`, es.pack.collection(c.title)),
     ),

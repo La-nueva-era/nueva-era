@@ -4,6 +4,7 @@ import DevNotice from "../components/DevNotice.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { es } from "../i18n/es.ts";
+import { hasFraming } from "../lib/packs.ts";
 import { SITE_NAME } from "../site.config.ts";
 import "../styles/global.css";
 
@@ -57,6 +58,7 @@ const ogImage = new URL(image, Astro.site);
       title={SITE_NAME}
       href="/rss.xml"
     />
+    {hasFraming && <link rel="describedby" href="/llms.txt" />}
     <script is:inline>
       // Reader preferences before first paint (no theme flash).
       try {

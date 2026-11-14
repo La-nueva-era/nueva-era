@@ -104,6 +104,27 @@ export async function packFile(
   return `${(await framing(abridged)).trimEnd()}\n\n---\n\n${body}`;
 }
 
+let full: Promise<string> | undefined;
+const byAuthor = new Map<string, Promise<string>>();
+
+/** The whole public archive, as served at /llms-full.txt. */
+export function fullPack(): Promise<string> {
+  full ??= loadEdition().then((e) => packFile(e.works.filter((w) => w.public)));
+  return full;
+}
+
+/** One author's public works, as served at /pack/<author>.md. */
+export function authorPack(author: string): Promise<string> {
+  let pack = byAuthor.get(author);
+  if (!pack) {
+    pack = loadEdition().then((e) =>
+      packFile(e.works.filter((w) => w.public && w.meta.author === author)),
+    );
+    byAuthor.set(author, pack);
+  }
+  return pack;
+}
+
 /** The first paragraph after the first heading of the framing: the llms.txt summary. */
 export async function framingSummary(): Promise<string> {
   const first = abridge(await framing(false), [1]);
