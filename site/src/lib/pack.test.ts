@@ -10,6 +10,7 @@ const work: PackWork = {
   published: "2022-04-06",
   collections: [],
   tags: [],
+  related: [],
   status: "reviewed",
   reviewedOn: "2026-09-01",
   verseCount: 4,
@@ -52,6 +53,15 @@ const work: PackWork = {
 };
 
 describe("renderWork", () => {
+  it("lists related works by id", () => {
+    expect(
+      renderWork({
+        ...work,
+        related: ["solitario/a-contracultura", "ozelot/whatever"],
+      }),
+    ).toContain("related: solitario/a-contracultura; ozelot/whatever\n");
+  });
+
   it("renders the per-work pack shape", () => {
     expect(renderWork(work)).toBe(
       [
@@ -62,6 +72,7 @@ describe("renderWork", () => {
         "published: 2022-04-06",
         "collections: —",
         "tags: —",
+        "related: —",
         "status: reviewed (2026-09-01)",
         "verses: 4",
         "",

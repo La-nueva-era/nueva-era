@@ -20,8 +20,8 @@ if (framingSource === undefined) {
   );
 }
 
-/** Framing items kept in a single work's twin. */
-const ABRIDGED = [1, 3, 6, 7];
+/** Framing sections kept in a single work's twin: all but «Estructura». */
+const ABRIDGED = [1, 2, 4, 5, 6];
 
 export const hasFraming = framingSource !== undefined;
 
@@ -40,6 +40,9 @@ function toPackWork(edition: Edition, w: Work): PackWork {
     published: w.meta.youtube.published,
     collections: series("collections"),
     tags: series("tags"),
+    related: [
+      ...new Set([...(w.meta.related ?? []), ...w.derived.relatedFrom]),
+    ].filter((id) => edition.byId.get(id)?.public),
     status: w.meta.status,
     reviewedOn: w.meta.edition?.reviewed_on,
     verseCount: w.verseCount,

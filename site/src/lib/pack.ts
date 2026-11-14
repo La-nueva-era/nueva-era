@@ -20,6 +20,8 @@ export type PackWork = {
   published: string;
   collections: Series[];
   tags: Series[];
+  /** Ids of related works, both directions. */
+  related: string[];
   status: "draft" | "reviewed";
   reviewedOn?: string | undefined;
   verseCount: number;
@@ -75,6 +77,7 @@ export function renderWork(w: PackWork): string {
     `published: ${w.published}`,
     `collections: ${series(w.collections)}`,
     `tags: ${series(w.tags)}`,
+    `related: ${w.related.length === 0 ? "—" : w.related.join("; ")}`,
     `status: ${w.status === "reviewed" && w.reviewedOn ? `reviewed (${w.reviewedOn})` : w.status}`,
     `verses: ${w.verseCount}`,
   ];
