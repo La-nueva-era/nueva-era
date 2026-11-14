@@ -1,5 +1,5 @@
 ---
-import { Search, X } from "@lucide/astro";
+import { ArrowRight, Search, X } from "@lucide/astro";
 import Icon from "./Icon.astro";
 import { es } from "../i18n/es.ts";
 ---
@@ -39,6 +39,10 @@ import { es } from "../i18n/es.ts";
     aria-label={es.search.label}
     hidden
   ></ul>
+  <template id="sugg-all-icons">
+    <Icon icon={Search} size={15} class="lead" />
+    <Icon icon={ArrowRight} size={15} class="trail" />
+  </template>
 </form>
 
 <script>
@@ -118,16 +122,22 @@ import { es } from "../i18n/es.ts";
             : "";
           return option(`sugg-${i}`, w.url, w.title, `${w.author}${series}`);
         });
-      list.replaceChildren(
-        ...items.filter((x) => x !== null),
-        option(
-          "sugg-all",
-          `/buscar?q=${encodeURIComponent(q)}`,
-          es.search.inVerses(q),
-          undefined,
-          "all",
-        ),
+      const all = option(
+        "sugg-all",
+        `/buscar?q=${encodeURIComponent(q)}`,
+        es.search.inVerses(q),
+        undefined,
+        "all",
       );
+      const icons = document.getElementById("sugg-all-icons");
+      const link = all.firstElementChild;
+      if (icons instanceof HTMLTemplateElement && link) {
+        const icon = icons.content.cloneNode(true) as DocumentFragment;
+        const [lead, trail] = [...icon.children];
+        if (lead) link.prepend(lead);
+        if (trail) link.append(trail);
+      }
+      list.replaceChildren(...items.filter((x) => x !== null), all);
       list.hidden = false;
       input.setAttribute("aria-expanded", "true");
       setActive(-1);
@@ -235,15 +245,19 @@ import { es } from "../i18n/es.ts";
     top: 50%;
     right: 0.6em;
     translate: 0 -50%;
-    min-width: 1.5em;
-    padding: 0 0.4em;
+    display: grid;
+    place-items: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    padding: 0 0.35em;
     border: 1px solid var(--line);
-    border-radius: calc(var(--r) - 3px);
+    border-bottom-width: 2px;
+    border-radius: var(--r-sm);
+    background: var(--raise);
     font: inherit;
-    font-size: var(--fs-sm);
-    line-height: 1.5;
-    text-align: center;
-    color: var(--faint);
+    font-size: var(--fs-xs);
+    line-height: 1;
+    color: var(--muted);
     pointer-events: none;
   }
   input:focus ~ .key,
@@ -295,7 +309,12 @@ import { es } from "../i18n/es.ts";
   .sugg :global(a[aria-selected="true"]) {
     background: var(--raise-2);
   }
+  .sugg :global(a > span:first-child) {
+    min-width: 0;
+  }
   .sugg :global(.who) {
+    flex: none;
+    max-width: 45%;
     color: var(--faint);
     font-size: var(--fs-sm);
     margin-left: auto;
@@ -309,8 +328,22 @@ import { es } from "../i18n/es.ts";
     padding-top: 0.3rem;
   }
   .sugg :global(.all) {
+    align-items: center;
     color: var(--muted);
     font-size: var(--fs-ui);
+  }
+  .sugg :global(.all .trail) {
+    margin-left: auto;
+    transition: translate var(--t);
+  }
+  .sugg :global(.all:hover .trail),
+  .sugg :global(.all[aria-selected="true"] .trail) {
+    translate: 2px 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sugg :global(.all .trail) {
+      transition: none;
+    }
   }
 
   /* Touch screens: 16px keeps iOS from zooming into the field. */
