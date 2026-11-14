@@ -123,6 +123,14 @@ const ld = jsonLdScript(
   image={ogImage}
 >
   <script slot="head" type="application/ld+json" set:html={ld} />
+  {hasFraming && (
+    <link
+      slot="head"
+      rel="alternate"
+      type="text/markdown"
+      href={`${work.url}.md`}
+    />
+  )}
   <div class="titlebar indented">
     <div>
       <h1>

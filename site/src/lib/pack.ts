@@ -119,3 +119,8 @@ export function abridge(text: string, keep: number[]): string {
   }
   return keep.map((i) => sections[i - 1] ?? "").join("");
 }
+
+/** Rough token count for a pack file: four characters per token, in thousands. */
+export function approxTokens(text: string): string {
+  return `~${Math.max(1, Math.round(text.length / 4000))}k tokens`;
+}

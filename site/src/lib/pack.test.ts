@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { abridge, fillFraming, renderWork, type PackWork } from "./pack.ts";
+import {
+  abridge,
+  approxTokens,
+  fillFraming,
+  renderWork,
+  type PackWork,
+} from "./pack.ts";
 
 const work: PackWork = {
   id: "solitario/nueva-era",
@@ -200,5 +206,16 @@ describe("framing", () => {
     expect(abridge(framing, [1, 3])).toBe(
       "# Uno {{version}}\n\nA {{url}}\n\n## Tres\n\nC\n",
     );
+  });
+});
+
+describe("approxTokens", () => {
+  it("estimates four characters per token, in thousands", () => {
+    expect(approxTokens("x".repeat(1_168_900))).toBe("~292k tokens");
+    expect(approxTokens("x".repeat(151_411))).toBe("~38k tokens");
+  });
+
+  it("never rounds a small file down to zero", () => {
+    expect(approxTokens("x".repeat(900))).toBe("~1k tokens");
   });
 });
