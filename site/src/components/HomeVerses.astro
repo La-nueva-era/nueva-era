@@ -172,6 +172,7 @@ const size = (f: Fragment) =>
     display: flex;
     flex-direction: column;
     min-height: 0;
+    min-width: 0;
     max-width: 36rem;
   }
   .mark {
@@ -271,18 +272,25 @@ const size = (f: Fragment) =>
     color: var(--ink);
     text-decoration-color: var(--muted);
   }
+  /* Centred under the passage: thin round steps either side of a row of
+     short rules, the current one longer. The rules shrink to fit, so any
+     number of passages stays on one line. */
   .controls {
     display: flex;
     align-items: center;
-    gap: var(--s-1);
-    margin: var(--s-6) 0 0 -0.55rem;
+    justify-content: center;
+    gap: var(--s-3);
+    align-self: stretch;
+    min-width: 0;
+    margin-top: var(--s-6);
   }
   .step {
+    flex: none;
     display: grid;
     place-items: center;
     width: 2.25rem;
     height: 2.25rem;
-    border-radius: 50%;
+    border-radius: var(--r-pill);
     color: var(--muted);
     transition:
       color var(--t),
@@ -294,29 +302,35 @@ const size = (f: Fragment) =>
   }
   .dots {
     display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
   }
   .dot {
+    flex: 0 1 auto;
+    width: 2rem;
+    min-width: 0.75rem;
     display: grid;
     place-items: center;
-    width: 1.5rem;
     height: 2.25rem;
+    transition: width var(--t-slow);
+  }
+  .dot[aria-current="true"] {
+    width: 3rem;
   }
   .dot::before {
     content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    border: 1px solid var(--muted);
-    transition:
-      background var(--t),
-      border-color var(--t);
+    width: calc(100% - 0.75rem);
+    min-width: 0.375rem;
+    height: 3px;
+    border-radius: var(--r-pill);
+    background: var(--faint);
+    transition: background var(--t);
   }
   .dot:hover::before {
-    border-color: var(--ink);
+    background: var(--muted);
   }
   .dot[aria-current="true"]::before {
     background: var(--ink);
-    border-color: var(--ink);
   }
 
   /* Narrow screens: no image beside to match, so the frame has a fixed
@@ -343,7 +357,8 @@ const size = (f: Fragment) =>
   }
   @media (prefers-reduced-motion: reduce) {
     figure,
-    figure.on {
+    figure.on,
+    .dot {
       transition: none;
     }
   }
