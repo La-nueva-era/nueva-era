@@ -27,7 +27,6 @@ export const es = {
     label: "Pie de página",
     line: "Archivo de la obra de Solitario y Ozelot. Proyecto independiente y no oficial, sin vínculo con los autores.",
     code: "Código fuente",
-    downloads: "Descargas",
     rss: "RSS",
   },
   nav: {

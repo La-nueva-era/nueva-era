@@ -7,10 +7,7 @@ interface Props {
   wide?: boolean;
 }
 const { wide = false } = Astro.props;
-const links = [
-  ["/descargas", es.footer.downloads],
-  ["/rss.xml", es.footer.rss],
-] as const;
+const links = [["/rss.xml", es.footer.rss]] as const;
 ---
 
 <footer class:list={["foot", { wide }]}>
