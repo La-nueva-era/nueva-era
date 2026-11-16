@@ -1,7 +1,12 @@
 ---
-// Thumbnail facade: no iframe and no YouTube script until the
-// reader clicks; then the youtube-nocookie.com player replaces it.
-import { Play } from "@lucide/astro";
+// The work's video. A thumbnail facade: no iframe and no YouTube script
+// until the reader presses play; then scripts/player.ts puts the
+// youtube-nocookie.com player in its place.
+//
+// The figure never leaves its slot in the document (moving an iframe
+// reloads it). As the floating mini video it is only `position: fixed`,
+// and the slot keeps its place on the page.
+import { GripHorizontal, Play, X } from "@lucide/astro";
 import Icon from "./Icon.astro";
 import { es } from "../i18n/es.ts";
 
@@ -15,45 +20,64 @@ const { id, title } = Astro.props;
 const fallback = `if(this.naturalWidth<=120&&this.srcset){this.removeAttribute("srcset");this.src="https://i.ytimg.com/vi/${id}/hqdefault.jpg"}`;
 ---
 
-<figure class="video" data-video={id} data-title={title}>
-  <img
-    class="thumb"
-    src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`}
-    srcset={`https://i.ytimg.com/vi/${id}/hqdefault.jpg 480w, https://i.ytimg.com/vi/${id}/maxresdefault.jpg 1280w`}
-    sizes="(max-width: 640px) 100vw, 64ch"
-    alt=""
-    width="480"
-    height="360"
-    fetchpriority="high"
-    onload={fallback}
-    onerror={fallback}
-  />
-  <button class="go" type="button" aria-label={es.work.play(title)}>
-    <span class="disc">
-      <Icon icon={Play} size={26} />
-    </span>
+<div class="slot">
+  <button class="back" id="video-back" type="button" hidden>
+    {es.work.videoBack}
   </button>
-</figure>
-
-<script>
-  for (const fig of document.querySelectorAll<HTMLElement>(
-    "figure[data-video]",
-  )) {
-    fig.querySelector(".go")?.addEventListener("click", () => {
-      const iframe = document.createElement("iframe");
-      iframe.src = `https://www.youtube-nocookie.com/embed/${fig.dataset.video}?autoplay=1`;
-      iframe.title = fig.dataset.title ?? "";
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
-      iframe.allowFullscreen = true;
-      fig.replaceChildren(iframe);
-      iframe.focus();
-    });
-  }
-</script>
+  <figure class="video" id="video" data-video={id} data-title={title}>
+    <img
+      class="thumb"
+      src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`}
+      srcset={`https://i.ytimg.com/vi/${id}/hqdefault.jpg 480w, https://i.ytimg.com/vi/${id}/maxresdefault.jpg 1280w`}
+      sizes="(max-width: 640px) 100vw, 64ch"
+      alt=""
+      width="480"
+      height="360"
+      fetchpriority="high"
+      onload={fallback}
+      onerror={fallback}
+    />
+    <button class="go" type="button" aria-label={es.work.play(title)}>
+      <span class="disc">
+        <Icon icon={Play} size={26} />
+      </span>
+    </button>
+    <div class="handle" id="video-handle" hidden>
+      <span class="grip">
+        <Icon icon={GripHorizontal} size={16} />
+      </span>
+      <button
+        id="video-hide"
+        type="button"
+        title={es.work.playerHideVideo}
+        aria-label={es.work.playerHideVideo}
+      >
+        <Icon icon={X} size={16} />
+      </button>
+    </div>
+  </figure>
+</div>
 
 <style>
-  .video {
+  .slot {
+    position: relative;
     margin: var(--s-8) 0 0 var(--indent);
+    aspect-ratio: 16 / 9;
+    border-radius: var(--r);
+    background: var(--raise) center / cover;
+  }
+  /* Shown in the slot while the video floats: brings it back. */
+  .back {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border-radius: var(--r);
+    background: var(--video-scrim);
+    color: var(--on-video);
+    font-size: var(--fs-ui);
+  }
+  .video {
+    margin: 0;
     position: relative;
     aspect-ratio: 16 / 9;
     border-radius: var(--r);
@@ -103,5 +127,66 @@ const fallback = `if(this.naturalWidth<=120&&this.srcset){this.removeAttribute("
   .video .go:hover .disc {
     transform: scale(1.06);
     opacity: 1;
+  }
+
+  /* Floating mini video; player.ts sets its left and top. */
+  .video.mini {
+    position: fixed;
+    z-index: 11;
+    width: min(27rem, calc(100vw - 2 * var(--s-4)));
+    overflow: visible;
+    border-radius: 0 0 var(--r) var(--r);
+    box-shadow: var(--shadow);
+    transition: transform var(--t-slow) ease-out;
+  }
+  .video.mini :global(iframe) {
+    border-radius: 0 0 var(--r) var(--r);
+  }
+  .video.dragging {
+    transition: none;
+  }
+  /* An iframe swallows pointer events; let the drag through. */
+  .video.dragging :global(iframe) {
+    pointer-events: none;
+  }
+  .handle {
+    position: absolute;
+    inset: auto 0 100% 0;
+    display: flex;
+    align-items: center;
+    height: var(--s-8);
+    padding-left: var(--s-2);
+    border-radius: var(--r) var(--r) 0 0;
+    background: var(--raise-2);
+    color: var(--muted);
+    cursor: grab;
+    touch-action: none;
+  }
+  .handle[hidden] {
+    display: none;
+  }
+  .video.dragging .handle {
+    cursor: grabbing;
+  }
+  .grip {
+    flex: 1;
+    display: flex;
+  }
+  .handle button {
+    display: grid;
+    place-items: center;
+    width: var(--s-8);
+    height: var(--s-8);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    transition: color var(--t);
+  }
+  .handle button:hover {
+    color: var(--ink);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .video.mini {
+      transition: none;
+    }
   }
 </style>

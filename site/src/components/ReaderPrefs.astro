@@ -69,7 +69,7 @@ import { es } from "../i18n/es.ts";
   .prefs-btn {
     position: fixed;
     right: var(--s-4);
-    bottom: var(--s-4);
+    bottom: calc(var(--s-4) + var(--player-bar, 0px));
     z-index: 9;
     width: 2.5rem;
     height: 2.5rem;
@@ -89,7 +89,7 @@ import { es } from "../i18n/es.ts";
   .prefs {
     position: fixed;
     right: var(--s-4);
-    bottom: 4.1rem;
+    bottom: calc(4.1rem + var(--player-bar, 0px));
     z-index: 9;
     width: 15.5rem;
     background: var(--raise);
