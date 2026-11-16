@@ -29,6 +29,31 @@ async function copy(text: string, done: string) {
 }
 
 const pageUrl = () => location.origin + location.pathname;
+/** The work as plain text with its context, written for language models. */
+const twinUrl = () => `${pageUrl()}.md`;
+
+/** Copies a text that has to be fetched first. Safari only allows a
+ *  clipboard write begun inside the click, so where it is supported the
+ *  clipboard is handed the pending text instead of waiting for it. */
+async function copyFetched(url: string, done: string) {
+  const text = fetch(url).then((r) => {
+    if (!r.ok) throw new Error(`${r.status} ${url}`);
+    return r.text();
+  });
+  try {
+    if (typeof ClipboardItem === "undefined") {
+      await navigator.clipboard.writeText(await text);
+    } else {
+      const blob = text.then((t) => new Blob([t], { type: "text/plain" }));
+      await navigator.clipboard.write([
+        new ClipboardItem({ "text/plain": blob }),
+      ]);
+    }
+    toast(done);
+  } catch {
+    toast(es.work.toastFailed);
+  }
+}
 
 /** A verse's text as read: no number, no note markers. */
 function verseText(el: Element): string {
@@ -83,6 +108,14 @@ document.getElementById("copy-main")?.addEventListener("click", () => {
 });
 document.getElementById("m-link")?.addEventListener("click", () => {
   void copy(pageUrl(), es.work.toastLink);
+  setMenu(false);
+});
+document.getElementById("m-llm-text")?.addEventListener("click", () => {
+  void copyFetched(twinUrl(), es.work.toastLlmText);
+  setMenu(false);
+});
+document.getElementById("m-llm-link")?.addEventListener("click", () => {
+  void copy(twinUrl(), es.work.toastLlmLink);
   setMenu(false);
 });
 

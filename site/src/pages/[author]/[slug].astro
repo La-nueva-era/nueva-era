@@ -1,11 +1,22 @@
 ---
 // Work page.
-import { ChevronDown, Copy, FileText, Link, Play } from "@lucide/astro";
+import {
+  ChevronDown,
+  Copy,
+  FileSymlink,
+  FileText,
+  Link,
+  Play,
+  Search,
+} from "@lucide/astro";
 import Base from "../../layouts/Base.astro";
 import Icon from "../../components/Icon.astro";
 import ReaderPrefs from "../../components/ReaderPrefs.astro";
 import SeriesMark from "../../components/SeriesMark.astro";
 import VideoFacade from "../../components/VideoFacade.astro";
+import DevTimingTool from "../../components/DevTimingTool.astro";
+import FindInText from "../../components/FindInText.astro";
+import PlayerBar from "../../components/PlayerBar.astro";
 import { es, formatDate } from "../../i18n/es.ts";
 import { cite } from "../../lib/cite.ts";
 import { loadEdition, type Work } from "../../lib/edition.ts";
@@ -152,36 +163,53 @@ const ld = jsonLdScript(
         </p>
       )}
     </div>
-    <div class="copygroup" data-cite={cite(work.citable)}>
-      <button id="copy-main" type="button" title={es.work.copyTitle}>
-        <Icon icon={Copy} size={14} class="mi" />
-        {es.work.copy}
-      </button>
+    <div class="actions">
       <button
-        id="copy-more"
+        class="find-open"
+        id="find-open"
         type="button"
-        aria-haspopup="menu"
-        aria-expanded="false"
-        aria-controls="copy-menu"
-        aria-label={es.work.copyMore}
+        title={es.work.findLabel}
       >
-        <Icon icon={ChevronDown} size={12} />
+        <Icon icon={Search} size={14} class="mi" />
+        {es.work.find}
       </button>
-      <div class="menu" id="copy-menu" role="menu" hidden>
-        <button id="m-link" type="button" role="menuitem">
-          <Icon icon={Link} size={14} class="mi" />
-          {es.work.copyPageLink}
+      <div class="copygroup" data-cite={cite(work.citable)}>
+        <button id="copy-main" type="button" title={es.work.copyTitle}>
+          <Icon icon={Copy} size={14} class="mi" />
+          {es.work.copy}
         </button>
-        {hasFraming && (
-          <a href={`${work.url}.md`} role="menuitem">
-            <Icon icon={FileText} size={14} class="mi" />
-            {es.work.plainText}
+        <button
+          id="copy-more"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="copy-menu"
+          aria-label={es.work.copyMore}
+        >
+          <Icon icon={ChevronDown} size={12} />
+        </button>
+        <div class="menu" id="copy-menu" role="menu" hidden>
+          <button id="m-link" type="button" role="menuitem">
+            <Icon icon={Link} size={14} class="mi" />
+            {es.work.copyPageLink}
+          </button>
+          {hasFraming && (
+            <>
+              <button id="m-llm-text" type="button" role="menuitem">
+                <Icon icon={FileText} size={14} class="mi" />
+                {es.work.copyLlmText}
+              </button>
+              <button id="m-llm-link" type="button" role="menuitem">
+                <Icon icon={FileSymlink} size={14} class="mi" />
+                {es.work.copyLlmLink}
+              </button>
+            </>
+          )}
+          <a href={youtubeUrl} target="_blank" rel="noopener" role="menuitem">
+            <Icon icon={Play} size={14} class="mi" />
+            {es.work.watchOnYouTube}
           </a>
-        )}
-        <a href={youtubeUrl} target="_blank" rel="noopener" role="menuitem">
-          <Icon icon={Play} size={14} class="mi" />
-          {es.work.watchOnYouTube}
-        </a>
+        </div>
       </div>
     </div>
   </div>
@@ -195,7 +223,7 @@ const ld = jsonLdScript(
     style={`--digits: ${String(work.verseCount).length}`}
   >
     {work.stanzas.map((stanza) => (
-      <div class="stanza">
+      <div class="stanza" data-t={stanza.t}>
         {stanza.lines.map((line) =>
           line.kind === "voice" ? null : line.kind === "label" ? (
             <p class="label">{line.name}</p>
@@ -358,6 +386,15 @@ const ld = jsonLdScript(
 
   <Fragment slot="after">
     <ReaderPrefs />
+    <PlayerBar id={meta.youtube.id} />
+    <FindInText />
+    {import.meta.env.DEV && <DevTimingTool />}
+    {/* "Listen from here", cloned by player.ts into each timed stanza. */}
+    <template id="seek-tpl">
+      <button class="seek" type="button">
+        <Icon icon={Play} size={12} />
+      </button>
+    </template>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     {/* Icons for the selection menu, which work.ts builds on the client. */}
     <template id="icon-link">
@@ -371,6 +408,7 @@ const ld = jsonLdScript(
 
 <script>
   import "../../scripts/work.ts";
+  import "../../scripts/player.ts";
 </script>
 
 <style>
@@ -420,6 +458,30 @@ const ld = jsonLdScript(
     gap: var(--s-2);
   }
   /* Copy control */
+  .actions {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--s-2);
+    flex-shrink: 0;
+  }
+  .find-open {
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    margin-top: var(--s-2);
+    padding: 0.5em 0.8em;
+    border-radius: var(--r);
+    background: var(--raise);
+    color: var(--muted);
+    font-size: var(--fs-ui);
+    transition:
+      color var(--t),
+      background var(--t);
+  }
+  .find-open:hover {
+    color: var(--ink);
+    background: var(--raise-2);
+  }
   .copygroup {
     position: relative;
     display: flex;
@@ -513,7 +575,62 @@ const ld = jsonLdScript(
     margin: var(--s-14) 0 0;
   }
   .stanza {
+    position: relative;
     margin: 0 0 calc(var(--fs) * var(--lh));
+  }
+  /* The stanza that is sounding: a thin rule between numbers and text. */
+  .stanza:global(.now)::before {
+    content: "";
+    position: absolute;
+    left: calc(-0.5 * var(--vn-gap));
+    top: 0.35em;
+    bottom: 0.35em;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--ink);
+  }
+  /* "Listen from here", on stanzas that have a timestamp. */
+  .stanza :global(.seek) {
+    position: absolute;
+    top: 0.1em;
+    right: 0;
+    display: grid;
+    place-items: center;
+    width: var(--s-6);
+    height: var(--s-6);
+    border-radius: var(--r-pill);
+    color: var(--faint);
+    transition:
+      opacity var(--t),
+      color var(--t),
+      background var(--t);
+  }
+  .stanza :global(.seek[hidden]) {
+    display: none;
+  }
+  .stanza :global(.seek svg) {
+    fill: currentColor;
+  }
+  .stanza :global(.seek:hover) {
+    color: var(--ink);
+    background: var(--hl);
+  }
+  @media (hover: hover) {
+    .stanza :global(.seek) {
+      opacity: 0;
+    }
+    .stanza:hover :global(.seek),
+    .stanza:global(.now) :global(.seek),
+    .stanza :global(.seek:focus-visible) {
+      opacity: 1;
+    }
+  }
+  @media (max-width: 640px) {
+    .stanza :global(.seek) {
+      right: calc(-1 * var(--s-4));
+      width: var(--s-5);
+      height: var(--s-5);
+    }
   }
   .verse,
   .label {
@@ -677,7 +794,7 @@ const ld = jsonLdScript(
   :global(.chip-clear) {
     position: fixed;
     left: 50%;
-    bottom: 1.4rem;
+    bottom: calc(1.4rem + var(--player-bar, 0px));
     transform: translateX(-50%);
     z-index: 8;
     background: var(--raise);
@@ -787,7 +904,7 @@ const ld = jsonLdScript(
   :global(.toast) {
     position: fixed;
     left: 50%;
-    bottom: 1.4rem;
+    bottom: calc(1.4rem + var(--player-bar, 0px));
     transform: translateX(-50%) translateY(6px);
     z-index: 10;
     background: var(--ink);

@@ -1,0 +1,115 @@
+---
+// Find in the text of the work: a small panel like the browser's own
+// find-in-page, which is hard to reach on a phone. scripts/find.ts drives
+// it; the button that opens it (#find-open) is in the work's title bar.
+import { ChevronDown, ChevronUp, X } from "@lucide/astro";
+import Icon from "./Icon.astro";
+import { es } from "../i18n/es.ts";
+---
+
+<div class="find" id="find" role="search" hidden>
+  <input
+    id="find-input"
+    type="search"
+    placeholder={es.work.findLabel}
+    aria-label={es.work.findLabel}
+    autocomplete="off"
+    spellcheck="false"
+  />
+  <span class="count" id="find-count" aria-live="polite"></span>
+  <button
+    id="find-prev"
+    type="button"
+    title={es.work.findPrev}
+    aria-label={es.work.findPrev}
+  >
+    <Icon icon={ChevronUp} />
+  </button>
+  <button
+    id="find-next"
+    type="button"
+    title={es.work.findNext}
+    aria-label={es.work.findNext}
+  >
+    <Icon icon={ChevronDown} />
+  </button>
+  <button
+    id="find-close"
+    type="button"
+    title={es.work.findClose}
+    aria-label={es.work.findClose}
+  >
+    <Icon icon={X} />
+  </button>
+</div>
+
+<script>
+  import "../scripts/find.ts";
+</script>
+
+<style>
+  .find {
+    position: fixed;
+    top: var(--s-4);
+    right: var(--s-4);
+    z-index: 13;
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    max-width: calc(100vw - 2 * var(--s-4));
+    padding: var(--s-1) var(--s-1) var(--s-1) var(--s-3);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--shadow);
+    font-size: var(--fs-ui);
+  }
+  .find[hidden] {
+    display: none;
+  }
+  input {
+    width: 13rem;
+    min-width: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    outline: none;
+  }
+  /* The panel's own close button replaces the browser's clear cross. */
+  input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .count {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  button {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--s-8);
+    height: var(--s-8);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    transition:
+      color var(--t),
+      background var(--t);
+  }
+  button:hover {
+    color: var(--ink);
+    background: var(--hl);
+  }
+  /* Matches are painted over the text, which is never touched. */
+  :global(::highlight(find)) {
+    background-color: var(--hl-strong);
+  }
+  :global(::highlight(find-current)) {
+    background-color: var(--ink);
+    color: var(--bg);
+  }
+</style>

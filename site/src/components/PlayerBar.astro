@@ -1,0 +1,300 @@
+---
+// The player bar of the work page: play and pause, a timeline to drag, and
+// the controls of the floating video. Hidden until the reader presses play;
+// scripts/player.ts drives it.
+import {
+  ChevronDown,
+  ChevronUp,
+  LocateFixed,
+  Pause,
+  PictureInPicture2,
+  Play,
+} from "@lucide/astro";
+import Icon from "./Icon.astro";
+import { es } from "../i18n/es.ts";
+
+interface Props {
+  /** YouTube video id, for the thumbnail. */
+  id: string;
+}
+const { id } = Astro.props;
+---
+
+<div class="bar" id="player-bar" data-state="paused" hidden>
+  <div class="row">
+    <img
+      class="art"
+      src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`}
+      alt=""
+      width="64"
+      height="36"
+      loading="lazy"
+    />
+    <button
+      class="play"
+      id="player-play"
+      type="button"
+      aria-label={es.work.playerPlay}
+    >
+      <Icon icon={Play} class="when-paused" />
+      <Icon icon={Pause} class="when-playing" />
+    </button>
+    <div class="line">
+      <span class="time" id="player-time">
+        0:00
+      </span>
+      <div class="track">
+        <div class="ticks" id="player-ticks"></div>
+        <input
+          id="player-range"
+          type="range"
+          min="0"
+          max="1000"
+          value="0"
+          aria-label={es.work.playerPosition}
+        />
+      </div>
+      <span class="time" id="player-duration">
+        0:00
+      </span>
+    </div>
+    <div class="side">
+      <button
+        id="player-here"
+        type="button"
+        title={es.work.playerCurrentStanza}
+        aria-label={es.work.playerCurrentStanza}
+        hidden
+      >
+        <Icon icon={LocateFixed} />
+      </button>
+      <button
+        id="player-video"
+        type="button"
+        title={es.work.playerShowVideo}
+        aria-label={es.work.playerShowVideo}
+      >
+        <Icon icon={PictureInPicture2} />
+      </button>
+      <button
+        id="player-hide"
+        type="button"
+        title={es.work.playerHideBar}
+        aria-label={es.work.playerHideBar}
+      >
+        <Icon icon={ChevronDown} />
+      </button>
+    </div>
+  </div>
+</div>
+<button
+  class="tab"
+  id="player-tab"
+  type="button"
+  title={es.work.playerShowBar}
+  aria-label={es.work.playerShowBar}
+  hidden
+>
+  <Icon icon={ChevronUp} />
+</button>
+
+<style>
+  .bar {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 12;
+    border-top: 1px solid var(--line);
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: var(--muted);
+    font-size: var(--fs-ui);
+    font-variant-numeric: tabular-nums;
+    /* Slides in from the bottom edge, and back out when hidden. */
+    transition:
+      transform var(--t-slow) ease-out,
+      display var(--t-slow) allow-discrete;
+  }
+  .bar[hidden] {
+    display: none;
+    transform: translateY(100%);
+  }
+  @starting-style {
+    .bar {
+      transform: translateY(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bar {
+      transition: none;
+    }
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    max-width: var(--page-max-wide);
+    margin: 0 auto;
+    padding: var(--s-2) var(--page-pad-wide)
+      calc(var(--s-2) + env(safe-area-inset-bottom));
+  }
+  .art {
+    flex-shrink: 0;
+    width: var(--s-16);
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--r-sm);
+  }
+  .line {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+  .side {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+  }
+
+  /* Buttons */
+  .bar button,
+  .tab {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--s-10);
+    height: var(--s-10);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    transition:
+      color var(--t),
+      background var(--t);
+  }
+  .bar button[hidden],
+  .tab[hidden] {
+    display: none;
+  }
+  .bar button:hover {
+    color: var(--ink);
+    background: var(--hl);
+  }
+  .bar .play {
+    width: var(--s-12);
+    height: var(--s-12);
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .bar .play:hover {
+    background: var(--focus);
+    color: var(--bg);
+  }
+  /* Filled glyphs, as on the video's own play button. */
+  .play :global(svg) {
+    fill: currentColor;
+  }
+  .play :global(.when-paused) {
+    margin-left: 2px; /* the triangle reads as centred */
+  }
+  .bar[data-state="playing"] :global(.when-paused),
+  .bar[data-state="paused"] :global(.when-playing) {
+    display: none;
+  }
+
+  /* Timeline: a native range, restyled; the ticks mark the stanzas. */
+  .time {
+    min-width: 2.4em;
+    text-align: center;
+  }
+  .track {
+    position: relative;
+    flex: 1;
+    min-width: var(--s-12);
+    height: var(--s-8);
+  }
+  .track input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background: none;
+    cursor: pointer;
+  }
+  .track input::-webkit-slider-runnable-track {
+    height: 3px;
+    background: linear-gradient(
+      to right,
+      var(--ink) var(--played, 0%),
+      var(--line) var(--played, 0%)
+    );
+  }
+  .track input::-moz-range-track {
+    height: 3px;
+    background: var(--line);
+  }
+  .track input::-moz-range-progress {
+    height: 3px;
+    background: var(--ink);
+  }
+  .track input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: var(--s-3);
+    height: var(--s-3);
+    margin-top: calc(var(--s-3) / -2 + 1.5px);
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  .track input::-moz-range-thumb {
+    width: var(--s-3);
+    height: var(--s-3);
+    border: 0;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  .ticks :global(i) {
+    position: absolute;
+    top: calc(50% - var(--s-3) / 2);
+    width: 1px;
+    height: var(--s-3);
+    background: var(--muted);
+    pointer-events: none;
+  }
+
+  /* Shown in the corner while the bar is hidden: brings it back. */
+  .tab {
+    position: fixed;
+    left: var(--s-4);
+    bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+    z-index: 12;
+    border: 1px solid var(--line);
+    background: var(--raise);
+  }
+  .tab:hover {
+    color: var(--ink);
+  }
+
+  /* Phones: the timeline on its own row, the rest beneath. */
+  @media (max-width: 640px) {
+    .row {
+      flex-wrap: wrap;
+      gap: 0 var(--s-2);
+      padding-top: var(--s-1);
+    }
+    .line {
+      order: -1;
+      flex-basis: 100%;
+    }
+    .side {
+      margin-left: auto;
+    }
+    /* No floating video on phones. */
+    #player-video {
+      display: none;
+    }
+  }
+</style>

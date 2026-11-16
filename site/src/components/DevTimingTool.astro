@@ -1,0 +1,114 @@
+---
+// Development only, and only with ?tools in the address: record the second
+// each stanza starts while the song plays, try the result on the page, and
+// copy the `@t=` lines. The tool never writes to a work; the editor pastes
+// the lines into the file by hand. Marks are kept in this browser, per work.
+---
+
+<div class="tool" id="timing-tool" hidden>
+  <strong>Timing tool</strong>
+  <span id="timing-info"></span>
+  <button id="timing-mark" type="button">
+    Mark (M)
+  </button>
+  <button id="timing-undo" type="button">
+    Undo
+  </button>
+  <button id="timing-copy" type="button">
+    Copy @t lines
+  </button>
+  <button id="timing-clear" type="button">
+    Clear
+  </button>
+</div>
+
+<script>
+  import { currentTime, useTimes } from "../scripts/player.ts";
+
+  const tool = document.getElementById("timing-tool");
+  if (tool && new URLSearchParams(location.search).has("tools")) {
+    tool.hidden = false;
+    const byId = (id: string) => document.getElementById(id) as HTMLElement;
+    const info = byId("timing-info");
+    const stanzas = [
+      ...document.querySelectorAll<HTMLElement>(".poem .stanza"),
+    ];
+    const key = `timing-marks:${location.pathname}`;
+    let marks: number[] = JSON.parse(localStorage.getItem(key) ?? "[]");
+
+    const apply = () => {
+      localStorage.setItem(key, JSON.stringify(marks));
+      // A recorded mark wins over the timestamp written in the work.
+      useTimes((authored) => authored.map((t, i) => marks[i] ?? t));
+      info.textContent =
+        marks.length < stanzas.length
+          ? `Next: stanza ${marks.length + 1} of ${stanzas.length}`
+          : `All ${stanzas.length} stanzas marked`;
+      stanzas.forEach((s, i) =>
+        s.classList.toggle("timing-next", i === marks.length),
+      );
+    };
+    const mark = () => {
+      const seconds = currentTime();
+      if (seconds === null || marks.length >= stanzas.length) return;
+      marks.push(Math.floor(seconds));
+      apply();
+    };
+
+    byId("timing-mark").addEventListener("click", mark);
+    byId("timing-undo").addEventListener("click", () => {
+      marks.pop();
+      apply();
+    });
+    byId("timing-clear").addEventListener("click", () => {
+      marks = [];
+      apply();
+    });
+    byId("timing-copy").addEventListener("click", () => {
+      const lines = marks.map((t, i) => {
+        const verse = stanzas[i]?.querySelector(".verse");
+        return `@t=${t}\t# stanza ${i + 1}, from v. ${verse?.id.slice(1)}`;
+      });
+      void navigator.clipboard.writeText(lines.join("\n"));
+    });
+    document.addEventListener("keydown", (e) => {
+      if ((e.target as Element).closest("input, textarea")) return;
+      if (e.key.toLowerCase() === "m") mark();
+    });
+    apply();
+  }
+</script>
+
+<style>
+  /* Not in the site's voice on purpose: this is a tool, not the edition. */
+  .tool {
+    position: fixed;
+    top: var(--s-4);
+    left: var(--s-4);
+    z-index: 14;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2);
+    max-width: calc(100vw - 2 * var(--s-4));
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r);
+    background: var(--ink);
+    color: var(--bg);
+    font:
+      500 12px/1.3 system-ui,
+      sans-serif;
+  }
+  .tool[hidden] {
+    display: none;
+  }
+  button {
+    padding: var(--s-1) var(--s-2);
+    border: 1px solid currentColor;
+    border-radius: var(--r-sm);
+  }
+  :global(.timing-next) {
+    outline: 1px dashed var(--muted);
+    outline-offset: var(--s-2);
+  }
+</style>
