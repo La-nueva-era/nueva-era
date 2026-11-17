@@ -17,3 +17,12 @@ export function sitemapPaths(edition: Edition): string[] {
     "/indice/primeros-versos",
   ];
 }
+
+/**
+ * Public path of a page from `Astro.url.pathname`. With `build.format: "file"`
+ * the build reports the output file (/solitario.html, /index.html), while the
+ * dev server and the live site use the clean path (/solitario, /).
+ */
+export function pagePath(pathname: string): string {
+  return pathname.replace(/\.html$/, "").replace(/\/index$/, "") || "/";
+}

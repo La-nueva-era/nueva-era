@@ -7,9 +7,10 @@ import HeaderSearch from "./HeaderSearch.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import { es } from "../i18n/es.ts";
 import { loadEdition } from "../lib/edition.ts";
+import { pagePath } from "../lib/urls.ts";
 
 const { authors } = await loadEdition();
-const path = Astro.url.pathname;
+const path = pagePath(Astro.url.pathname);
 const links = [
   ...authors.map((a) => ({
     href: `/${a.id}`,
