@@ -109,6 +109,7 @@ async function build(): Promise<Edition> {
       collections: w.meta.collections ?? [],
       tags: w.meta.tags ?? [],
       related: w.meta.related ?? [],
+      mentions: w.meta.mentions,
       text: w.stanzas
         .flatMap((s) => s.lines)
         .map((l) => (l.kind === "verse" ? plainText(l.text) : ""))

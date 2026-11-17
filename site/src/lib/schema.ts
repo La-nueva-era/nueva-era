@@ -120,6 +120,7 @@ export const workSchema = z.strictObject({
   collections: z.array(membership).optional(),
   tags: z.array(membership).optional(),
   related: z.array(workId).optional(),
+  mentions: z.array(workId).optional(),
   voices: z
     .array(
       z.strictObject({

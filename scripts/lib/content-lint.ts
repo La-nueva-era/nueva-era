@@ -130,6 +130,10 @@ export function lintContent(files: Record<string, string>): Issue[] {
       if (!works.some((o) => o.id === r))
         report(w.path, "unknown-related", `unknown related work «${r}»`);
     }
+    for (const m of w.meta.mentions ?? []) {
+      if (!works.some((o) => o.id === m))
+        report(w.path, "unknown-mentions", `unknown mentioned work «${m}»`);
+    }
   }
   // Ordered collections and ordered tags (tags behave like EPs) share the rule.
   for (const kind of ["collections", "tags"] as const) {

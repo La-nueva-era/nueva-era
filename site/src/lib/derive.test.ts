@@ -97,6 +97,29 @@ describe("derive — intertextual mentions", () => {
     );
   });
 
+  it("takes a declared list of mentions over what the text contains", () => {
+    const works = [
+      w("solitario/pacto", { title: "Pacto" }),
+      w("solitario/tregua", { title: "Tregua" }),
+      w("solitario/x", { text: "un pacto", mentions: ["solitario/tregua"] }),
+      w("solitario/y", { text: "un pacto", mentions: [] }),
+      w("solitario/z", { text: "un pacto" }),
+    ];
+    const d = derive(works, authors);
+    expect(d.get("solitario/pacto")?.mentionedIn).toEqual(["solitario/z"]);
+    expect(d.get("solitario/tregua")?.mentionedIn).toEqual(["solitario/x"]);
+  });
+
+  it("leaves out declared mentions from hidden works", () => {
+    const works = [
+      w("solitario/pacto", { title: "Pacto" }),
+      w("solitario/x", { mentions: ["solitario/pacto"], public: false }),
+    ];
+    expect(derive(works, authors).get("solitario/pacto")?.mentionedIn).toEqual(
+      [],
+    );
+  });
+
   it("finds the other poet's name in a work's text", () => {
     const works = [
       w("solitario/a", { text: "como decía Ozelot" }),

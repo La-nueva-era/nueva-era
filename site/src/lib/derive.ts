@@ -14,6 +14,8 @@ export type DeriveWork = {
   collections: Membership[];
   tags: Membership[];
   related: string[];
+  /** The works this one mentions, when the editor lists them. */
+  mentions?: string[] | undefined;
   /** The work's verses as plain text. */
   text: string;
 };
@@ -30,7 +32,8 @@ export type Derived = {
   neighbours: Neighbours[];
   /** Public works whose `related` lists this one. */
   relatedFrom: string[];
-  /** Public works whose text contains this work's title. */
+  /** Public works that mention this one: listed in their `mentions` or,
+   *  when they have no list, found by this work's title in their text. */
   mentionedIn: string[];
   /** Ids of other authors whose name appears in this work's text. */
   mentionsAuthors: string[];
@@ -86,13 +89,16 @@ export function derive(
 
     const title = wholeWord(work.title);
     const own = texts.get(work.id) ?? "";
+    const mentionedBy = (other: DeriveWork) =>
+      other.mentions?.includes(work.id) ??
+      title.test(texts.get(other.id) ?? "");
     out.set(work.id, {
       neighbours,
       relatedFrom: visible
         .filter((o) => o.related.includes(work.id))
         .map((o) => o.id),
       mentionedIn: visible
-        .filter((o) => o.id !== work.id && title.test(texts.get(o.id) ?? ""))
+        .filter((o) => o.id !== work.id && mentionedBy(o))
         .map((o) => o.id),
       mentionsAuthors: authors
         .filter((a) => a.id !== work.author && wholeWord(a.name).test(own))
