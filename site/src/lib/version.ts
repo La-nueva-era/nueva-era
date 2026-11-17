@@ -20,7 +20,7 @@ export const edition = {
   version: git(["describe", "--tags", "--abbrev=0"]),
   commit:
     git(["rev-parse", "--short", "HEAD"]) ??
-    process.env.CF_PAGES_COMMIT_SHA?.slice(0, 7) ??
+    process.env.WORKERS_CI_COMMIT_SHA?.slice(0, 7) ??
     "unknown",
   date: new Date().toISOString().slice(0, 10),
 };

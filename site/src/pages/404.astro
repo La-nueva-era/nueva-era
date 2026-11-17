@@ -1,0 +1,14 @@
+---
+// Served by Cloudflare for every unknown path (not_found_handling: 404-page).
+import Base from "../layouts/Base.astro";
+import PageHead from "../components/PageHead.astro";
+import { es } from "../i18n/es.ts";
+import { SITE_NAME } from "../site.config.ts";
+---
+
+<Base title={`${es.pages.notFound} · ${SITE_NAME}`} noindex>
+  <PageHead title={es.pages.notFound} lead={es.pages.notFoundLead} />
+  <p class="indented">
+    <a href="/">{es.pages.backHome}</a>
+  </p>
+</Base>
