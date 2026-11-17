@@ -1,5 +1,18 @@
-# Cloudflare Pages headers. Pack files are for models and for people who fetch
-# them deliberately: never indexed by search engines.
+# Cloudflare static-asset headers.
+# https://developers.cloudflare.com/workers/static-assets/headers/
+
+# Fingerprinted by Astro: the name changes whenever the content does.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Only the canonical domain is indexed, never the workers.dev copies.
+https://:worker.:subdomain.workers.dev/*
+  X-Robots-Tag: noindex
+https://:version.:worker.:subdomain.workers.dev/*
+  X-Robots-Tag: noindex
+
+# Pack files are for models and for people who fetch them deliberately: never
+# indexed by search engines.
 /pack/*
   X-Robots-Tag: noindex
 /llms.txt

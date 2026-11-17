@@ -139,6 +139,9 @@ export const es = {
     noCollections: "Todavía no hay colecciones.",
     noTags: "Todavía no hay etiquetas.",
     kind: { album: "álbum", ep: "EP", cycle: "ciclo" },
+    notFound: "Página no encontrada",
+    notFoundLead: "No hay nada en esta dirección.",
+    backHome: "Volver al inicio",
   },
   prefs: {
     open: "Preferencias de lectura",

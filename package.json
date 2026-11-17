@@ -10,6 +10,8 @@
     "dev": "astro dev --root site",
     "build": "astro build --root site",
     "preview": "astro preview --root site",
+    "preview:cf": "pnpm build && wrangler dev",
+    "deploy": "pnpm build && wrangler deploy",
     "lint": "eslint . && prettier --check . --ignore-path .gitignore --ignore-path .prettierignore --ignore-path \"$(git rev-parse --git-path info/exclude)\"",
     "format": "prettier --write . --ignore-path .gitignore --ignore-path .prettierignore --ignore-path \"$(git rev-parse --git-path info/exclude)\"",
     "lint:content": "tsx scripts/lint-content.ts",
@@ -39,6 +41,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
     "vitest": "^5.0.5",
+    "wrangler": "^4.163.0",
     "yaml": "^2.9.1",
     "zod": "^4.6.7"
   }

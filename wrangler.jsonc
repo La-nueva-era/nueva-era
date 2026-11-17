@@ -1,0 +1,14 @@
+// Cloudflare Workers, static assets only: the site is fully prerendered, so
+// there is no Worker script (`main`) and no Astro adapter.
+// https://docs.astro.build/en/guides/deploy/cloudflare/
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nueva-era",
+  "compatibility_date": "2026-11-17",
+  "assets": {
+    "directory": "./site/dist",
+    // Clean URLs: /solitario serves solitario.html, /solitario/ redirects to it.
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page",
+  },
+}

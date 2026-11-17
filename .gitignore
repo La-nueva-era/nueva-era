@@ -3,6 +3,7 @@ dist/
 .astro/
 site/dist/
 site/.astro/
+.wrangler/
 coverage/
 *.log
 .DS_Store
