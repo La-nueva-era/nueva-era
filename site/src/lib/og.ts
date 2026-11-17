@@ -407,8 +407,8 @@ async function homeCard() {
 }
 
 /**
- * The card as an image: a work card is a JPEG (photographic art makes a PNG
- * of it several times heavier); the default and home cards are PNGs.
+ * The card as a JPEG: every card carries photographic art, which makes a PNG
+ * several times heavier, and some apps drop share images that heavy.
  */
 export async function renderOg(card: OgCard): Promise<Buffer> {
   const tree =
@@ -422,10 +422,7 @@ export async function renderOg(card: OgCard): Promise<Buffer> {
     height: OG_HEIGHT,
     fonts: await loadFonts(),
   });
-  const image = sharp(Buffer.from(svg));
-  return card.kind === "work"
-    ? image.jpeg({ quality: 85 }).toBuffer()
-    : image.png().toBuffer();
+  return sharp(Buffer.from(svg)).jpeg({ quality: 85 }).toBuffer();
 }
 
 const artCache = new Map<string, Promise<Buffer | undefined>>();

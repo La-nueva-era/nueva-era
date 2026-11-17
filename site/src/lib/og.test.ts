@@ -76,17 +76,16 @@ describe("renderOg", () => {
     const { width, height, format } = await sharp(buf).metadata();
     return { width, height, format };
   };
-  const png = { width: OG_WIDTH, height: OG_HEIGHT, format: "png" };
+  const jpeg = { width: OG_WIDTH, height: OG_HEIGHT, format: "jpeg" };
 
-  it("renders the default card as a 1200×630 PNG", async () => {
-    expect(await size(await renderOg({ kind: "default" }))).toEqual(png);
+  it("renders the default card as a 1200×630 JPEG", async () => {
+    expect(await size(await renderOg({ kind: "default" }))).toEqual(jpeg);
   });
 
-  it("renders the home card as a 1200×630 PNG", async () => {
-    expect(await size(await renderOg({ kind: "home" }))).toEqual(png);
+  it("renders the home card as a 1200×630 JPEG", async () => {
+    expect(await size(await renderOg({ kind: "home" }))).toEqual(jpeg);
   });
 
-  // Photographic art makes a PNG several times heavier than a JPEG.
   it("renders a work card with art and a series mark as a 1200×630 JPEG", async () => {
     const card = await renderOg({
       kind: "work",
@@ -95,7 +94,7 @@ describe("renderOg", () => {
       series: { title: "En defensa del arte", position: 1 },
       art: await image(563, 563),
     });
-    expect(await size(card)).toEqual({ ...png, format: "jpeg" });
+    expect(await size(card)).toEqual(jpeg);
   });
 });
 
