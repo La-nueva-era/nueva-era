@@ -5,10 +5,8 @@
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Only the canonical domain is indexed, never the workers.dev copies.
-https://:worker.:subdomain.workers.dev/*
-  X-Robots-Tag: noindex
-https://:version.:worker.:subdomain.workers.dev/*
+# Only the public site is indexed, never the per-version preview copies.
+https://:version-nueva-era.:subdomain.workers.dev/*
   X-Robots-Tag: noindex
 
 # Pack files are for models and for people who fetch them deliberately: never

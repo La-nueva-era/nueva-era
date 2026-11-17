@@ -1,5 +1,5 @@
 // Single source of the public origin: change only this line to move the site.
-export const SITE_URL = "https://lanuevaera.art";
+export const SITE_URL = "https://nueva-era.lanuevaeradelarte.workers.dev";
 
 export const SITE_NAME = "La nueva era";
 
