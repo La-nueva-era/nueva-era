@@ -80,6 +80,17 @@ describe("workSchema", () => {
       workSchema.safeParse({ ...work, related: ["nueva-era"] }).success,
     ).toBe(false);
   });
+
+  it("accepts a list of mentioned works, empty included", () => {
+    expect(workSchema.safeParse({ ...work, mentions: [] }).success).toBe(true);
+    expect(
+      workSchema.safeParse({ ...work, mentions: ["solitario/nueva-era"] })
+        .success,
+    ).toBe(true);
+    expect(
+      workSchema.safeParse({ ...work, mentions: ["nueva-era"] }).success,
+    ).toBe(false);
+  });
 });
 
 describe("authorSchema", () => {

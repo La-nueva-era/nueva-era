@@ -301,17 +301,24 @@ describe("lintContent — cross-references", () => {
     expect(rules(issues)).toEqual(["error:duplicate-youtube-id"]);
   });
 
-  it("fails on unknown collection, tag and related targets", () => {
+  it("fails on unknown collection, tag, related and mentions targets", () => {
     const front = {
       collections: "collections:\n  - id: nada",
       tags: "tags:\n  - id: nada",
       related: "related:\n  - solitario/nada",
+      mentions: "mentions:\n  - solitario/nada",
     };
     expect(rules(lint({ "solitario/uno.md": work("uno\n", front) }))).toEqual([
       "error:unknown-collection",
       "error:unknown-tag",
       "error:unknown-related",
+      "error:unknown-mentions",
     ]);
+  });
+
+  it("accepts an empty list of mentions", () => {
+    const front = { mentions: "mentions: []" };
+    expect(lint({ "solitario/uno.md": work("uno\n", front) })).toEqual([]);
   });
 
   it("accepts contiguous positions in an ordered collection, starting anywhere", () => {
