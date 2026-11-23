@@ -130,7 +130,7 @@ pero la de arte sí contiene de artesanía parte,
 pues toda obra requiere, para ser obra llamada,
 que su creación sea correctamente materializada.
 
-La substancia de la obra, por más {?detaísta} que suene,
+La substancia de la obra, por más dataísta que suene,
 no es más que la información accesible que esta contiene,
 y es obvio que la extensión a tal consecución conviene,
 pero a mayor el espacio más despacio el dato viene.
@@ -161,7 +161,7 @@ Por eso artesanía también es rimar en verso,
 lograr guardar un texto inmenso en un fragmento intenso.
 
 El buen arte es un reto intelectual al receptor,
-al que abruma lo complejo y lo fácil causa {?supor}.
+al que abruma lo complejo y lo fácil causa sopor.
 La inteligencia licencia su labor como extractor
 y en su grado está que su agrado sea mayor o menor.
 
@@ -173,7 +173,7 @@ concluirá de forma errónea que no le supone un reto.
 Por eso la ausencia de reto intelectual es justo
 la esencia que conduce a la refinación del gusto.
 Lo conocido se vuelve aburrido, y todo busto,
-cuando ha sido exprimido, ha perdido su cariz {?agusto}.
+cuando ha sido exprimido, ha perdido su cariz augusto.
 
 No es la madurez cuán ajada tengas la tez,
 el tiempo que vives tan solo describe tu vejez.
@@ -256,7 +256,7 @@ Exhiben cualquier bazofia ante un público pardillo
 y hay ricos que la compran por el precio de un castillo.
 
 Da igual la atención que en la «obra» se tenga puesta,
-{?carecer información} y esta ha de darse por supuesta.
+carece de información y esta ha de darse por supuesta.
 Aquello que dice contener solo lo contesta
 la maña del autor con una posterior respuesta.
 
@@ -278,7 +278,7 @@ pseudoestetas y apologetas de la mediocridad.
 No tengo para ellos palabras gentiles,
 más bien misiles, así que diles a esos ediles
 que bajo intereses viles, sean uno o miles,
-todos los hombres merecen el nombre de {?servirles}.
+todos los hombres merecen el nombre de serviles.
 
 El concepto de arte abstracto es falso, para ser exacto,
 no expresa ideas que no tengan con otra contacto.
@@ -301,7 +301,7 @@ Podrían ahorrarse el trayecto y el precio de la entrada,
 que obtendrían el mismo efecto viendo un hueso de aceituna.
 
 Pero yo veo un manchurrón y me emociono.
-Sí, bueno, cada uno con su locura y {?con no su} fetiche obsceno.
+Sí, bueno, cada uno con su locura y con su fetiche obsceno.
 No existe el arte abstracto, tan solo la artesanía,
 y puede ser muy bella si conserva la armonía.
 
