@@ -39,7 +39,7 @@ pues la obra de arte es plena y no la rellena el ambage.
 La obra de arte es su propio inicio y su meta,
 y no posteriormente se hace, nace completa,
 pues dentro de sí yace toda su información neta,
-desde la que el vulgo pase hasta la que el docto interpreta.
+desde la que el vulgo pace hasta la que el docto interpreta.
 
 Sin obra no puede haber arte, esto es así,
 porque el arte son los datos que la obra contiene en sí,
