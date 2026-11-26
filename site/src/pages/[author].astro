@@ -1,6 +1,7 @@
 ---
 // Author page: bio, support links, works by chronology, collections, tags.
 import Base from "../layouts/Base.astro";
+import DatesNote from "../components/DatesNote.astro";
 import PageHead from "../components/PageHead.astro";
 import SeriesMark from "../components/SeriesMark.astro";
 import WorkList from "../components/WorkList.astro";
@@ -85,10 +86,16 @@ const years = [author.born, author.died]
   )}
 
   <section class="section indented" aria-labelledby="h-works">
-    <h2 id="h-works">
-      {es.pages.works}{" "}
-      <span class="count">{es.pages.workCount(works.length)}</span>
-    </h2>
+    <div class="works-head">
+      <h2 id="h-works">
+        {es.pages.works}{" "}
+        <span class="count">{es.pages.workCount(works.length)}</span>
+      </h2>
+      <DatesNote notes={author.dates_note ? [author.dates_note] : []} />
+      <a class="chrono" href="/cronologia">
+        {es.pages.chronology}
+      </a>
+    </div>
     {works.length > 0 ? (
       <WorkList works={works} edition={edition} />
     ) : (
@@ -108,6 +115,22 @@ const years = [author.born, author.died]
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+  .works-head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-bottom: var(--s-4);
+  }
+  .works-head h2 {
+    font-size: var(--fs-h2);
+    font-weight: 600;
+    margin: 0;
+  }
+  .chrono {
+    margin-left: auto;
+    font-size: var(--fs-ui);
+    color: var(--muted);
   }
   .count {
     font-size: var(--fs-ui);

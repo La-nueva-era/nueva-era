@@ -1,0 +1,100 @@
+---
+// An (i) disclosure explaining what a work list's dates mean: always the
+// publication date, plus any author's own note on how that relates to
+// composition. Opens as a small panel; Escape or a click outside closes it.
+import { Info } from "@lucide/astro";
+import Icon from "./Icon.astro";
+import { es } from "../i18n/es.ts";
+
+interface Props {
+  /** Author notes shown after the general one. */
+  notes?: string[];
+}
+const { notes = [] } = Astro.props;
+---
+
+<details class="dates-note">
+  <summary title={es.pages.datesAbout} aria-label={es.pages.datesAbout}>
+    <Icon icon={Info} size={16} />
+  </summary>
+  <div class="panel">
+    <p>{es.pages.datesNote}</p>
+    {notes.map((n) => (
+      <p>{n}</p>
+    ))}
+  </div>
+</details>
+
+<script>
+  for (const d of document.querySelectorAll<HTMLDetailsElement>(
+    "details.dates-note",
+  )) {
+    document.addEventListener("click", (e) => {
+      if (d.open && !d.contains(e.target as Node)) d.open = false;
+    });
+    d.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && d.open) {
+        d.open = false;
+        d.querySelector("summary")?.focus();
+      }
+    });
+  }
+</script>
+
+<style>
+  .dates-note {
+    position: relative;
+    display: inline-block;
+    font-size: var(--fs-ui);
+    font-weight: 400;
+  }
+  summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--r-pill);
+    color: var(--faint);
+    cursor: pointer;
+    list-style: none;
+    /* Optical alignment with the heading's lowercase text, which sits below
+       the line box's centre. */
+    position: relative;
+    top: 0.15em;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary:hover,
+  .dates-note[open] summary {
+    color: var(--ink);
+    background: var(--hl);
+  }
+  .panel {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + var(--s-2));
+    left: 0;
+    width: min(36ch, calc(100vw - 2 * var(--page-pad)));
+    padding: var(--s-3) var(--s-4);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--raise);
+    box-shadow: var(--shadow);
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .panel p {
+    margin: 0;
+  }
+  .panel p + p {
+    margin-top: var(--s-2);
+  }
+  @media (max-width: 640px) {
+    .panel {
+      left: auto;
+      right: calc(-1 * var(--s-16));
+    }
+  }
+</style>

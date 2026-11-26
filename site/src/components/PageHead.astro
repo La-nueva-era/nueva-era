@@ -7,7 +7,10 @@ const { title, lead } = Astro.props;
 ---
 
 <div class="pagehead indented">
-  <h1>{title}</h1>
+  <div class="title">
+    <h1>{title}</h1>
+    <slot name="title-aside" />
+  </div>
   {lead && <p class="lead">{lead}</p>}
   <slot />
 </div>
@@ -15,6 +18,16 @@ const { title, lead } = Astro.props;
 <style>
   .pagehead {
     margin: var(--s-14) 0 var(--s-10);
+  }
+  .title {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  /* The title's descenders pull its line box's centre below the letters;
+     move the aside down to the middle of the lowercase text. */
+  .title > :global(:not(h1)) {
+    translate: 0 0.3rem;
   }
   h1 {
     font-size: var(--fs-h1);

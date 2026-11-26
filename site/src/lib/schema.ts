@@ -46,6 +46,8 @@ export const authorSchema = z.strictObject({
   born: yearOrDate.optional(),
   died: yearOrDate.nullable().optional(),
   bio: z.string().optional(),
+  /** How this author's publication dates relate to composition. */
+  dates_note: z.string().min(1).optional(),
   links: z
     .strictObject({
       youtube: url.optional(),
