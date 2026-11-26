@@ -3,7 +3,7 @@ title: Dysfunction of the system
 author: ozelot
 youtube:
   id: KHB2GvFrFPI
-  published: 2026-02-05
+  published: 2010-03-21
 status: draft
 visibility: public
 sources:

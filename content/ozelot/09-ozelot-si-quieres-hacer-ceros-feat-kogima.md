@@ -3,7 +3,7 @@ title: Si quieres hacer ceros
 author: ozelot
 youtube:
   id: 6B7N0RGoiOw
-  published: 2026-02-04
+  published: 2010-03-21
 status: draft
 visibility: public
 sources:

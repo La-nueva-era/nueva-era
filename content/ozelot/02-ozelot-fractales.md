@@ -3,7 +3,7 @@ title: Fractales
 author: ozelot
 youtube:
   id: wdf64Gaq4Dk
-  published: 2026-02-04
+  published: 2010-03-21
 status: draft
 visibility: public
 sources:
