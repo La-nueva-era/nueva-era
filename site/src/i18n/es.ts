@@ -132,6 +132,9 @@ export const es = {
     collections: "Colecciones",
     tags: "Etiquetas",
     chronology: "Cronología",
+    datesAbout: "Sobre las fechas",
+    datesNote:
+      "Las fechas de esta lista corresponden a la publicación de cada obra.",
     support: "Apoyar al autor",
     composed: (when: string) => `compuesta en ${when}`,
     workCount: (n: number) => (n === 1 ? "1 obra" : `${n} obras`),

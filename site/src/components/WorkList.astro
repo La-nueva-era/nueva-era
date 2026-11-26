@@ -1,6 +1,6 @@
 ---
-// A list of works as rows: date, title, author (optional), series marks.
-// No cards, no thumbnails.
+// A list of works as rows: date, thumbnail, title, author (optional),
+// series marks. No cards: the thumbnail is a small aid to skimming.
 import { es, formatDate } from "../i18n/es.ts";
 import type { Edition, Work } from "../lib/edition.ts";
 import { seriesTitle, seriesUrl } from "../lib/series.ts";
@@ -49,6 +49,15 @@ const positionOf = (w: Work) =>
           </time>
         )}
       </span>
+      <img
+        class="thumb"
+        src={`https://i.ytimg.com/vi/${w.meta.youtube.id}/mqdefault.jpg`}
+        alt=""
+        width="320"
+        height="180"
+        loading="lazy"
+        decoding="async"
+      />
       <span class="body">
         <a class="title" href={w.url}>
           {w.meta.title}
@@ -97,14 +106,14 @@ const positionOf = (w: Work) =>
   }
   li {
     display: grid;
-    grid-template-columns: 7.5rem 1fr;
+    grid-template-columns: 7.5rem var(--s-12) 1fr;
     gap: var(--s-4);
-    align-items: baseline;
+    align-items: center;
     padding: var(--s-2) 0;
     border-bottom: 1px solid var(--line);
   }
   .positions li {
-    grid-template-columns: 2rem 1fr;
+    grid-template-columns: 2rem var(--s-12) 1fr;
   }
   .positions .lead {
     text-align: right;
@@ -115,6 +124,15 @@ const positionOf = (w: Work) =>
     font-feature-settings:
       "tnum" 1,
       "onum" 1;
+  }
+  .thumb {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--r-sm);
+    background: var(--line);
   }
   .body {
     display: flex;
@@ -139,9 +157,26 @@ const positionOf = (w: Work) =>
     color: var(--faint);
   }
   @media (max-width: 640px) {
-    li {
-      grid-template-columns: 1fr;
-      gap: 0;
+    li,
+    .positions li {
+      grid-template-columns: var(--s-12) 1fr;
+      grid-template-areas:
+        "thumb lead"
+        "thumb body";
+      column-gap: var(--s-3);
+      row-gap: 0;
+    }
+    .lead {
+      grid-area: lead;
+    }
+    .positions .lead {
+      text-align: left;
+    }
+    .thumb {
+      grid-area: thumb;
+    }
+    .body {
+      grid-area: body;
     }
   }
 </style>

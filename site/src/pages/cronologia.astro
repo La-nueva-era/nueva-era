@@ -1,6 +1,7 @@
 ---
 // Both poets on one timeline, by publication date; composition date when known.
 import Base from "../layouts/Base.astro";
+import DatesNote from "../components/DatesNote.astro";
 import PageHead from "../components/PageHead.astro";
 import WorkList from "../components/WorkList.astro";
 import { es } from "../i18n/es.ts";
@@ -15,10 +16,14 @@ const years = [
 ---
 
 <Base title={`${es.pages.chronology} · ${SITE_NAME}`}>
-  <PageHead
-    title={es.pages.chronology}
-    lead={es.pages.workCount(works.length)}
-  />
+  <PageHead title={es.pages.chronology} lead={es.pages.workCount(works.length)}>
+    <DatesNote
+      slot="title-aside"
+      notes={edition.authors.flatMap((a) =>
+        a.dates_note ? [a.dates_note] : [],
+      )}
+    />
+  </PageHead>
   {works.length === 0 && <p class="empty indented">{es.pages.noWorks}</p>}
   {years.map((y) => (
     <section class="section indented" aria-labelledby={`y${y}`}>
